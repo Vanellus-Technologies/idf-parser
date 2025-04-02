@@ -1,24 +1,38 @@
 use nom::branch::alt;
 use nom::sequence::{delimited, terminated};
 
-use crate::idf_v3::primitives::{owner, ws};
+use crate::primitives::{owner, ws};
 use nom::bytes::complete::{is_not, tag};
 use nom::multi::many1;
 use nom::number::complete::float;
 use nom::IResult;
 use nom::Parser;
 
+/// Represents a drilled hole in the IDF format.
+/// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=25
 pub struct Hole {
-    diameter: f32,
-    x: f32,                  // absolute x coordinate
-    y: f32,                  // absolute y coordinate
-    plating_style: String, // PTH: Plated (conducting) through hole, NPTH: Non-plated (non-conducting) through hole
-    associated_part: String, // BOARD, NOREFDES, PANEL, Reference designator
-    hole_type: String,     // PIN, VIA, MTG, TOOL, Other
-    owner: String,         // The owner of the hole ECAD, MCAD, UNOWNED
+    pub diameter: f32,
+    pub x: f32,                  // absolute x coordinate
+    pub y: f32,                  // absolute y coordinate
+    pub plating_style: String, // PTH: Plated (conducting) through hole, NPTH: Non-plated (non-conducting) through hole
+    pub associated_part: String, // BOARD, NOREFDES, PANEL, Reference designator
+    pub hole_type: String,     // PIN, VIA, MTG, TOOL, Other
+    pub owner: String,         // The owner of the hole ECAD, MCAD, UNOWNED
 }
 
-fn drilled_hole(input: &str) -> IResult<&str, Hole> {
+/// Parses a single drilled hole from the input string.
+/// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=25
+///
+/// # Example
+///
+/// ```
+/// use idf_parser::drilled_holes::{drilled_hole, Hole};
+/// let input = "30.0 1600.0 100.0 PTH J1 PIN ECAD";
+///
+/// let (remaining, hole) = drilled_hole(input).unwrap();
+/// assert_eq!(hole.x, 1600.0);
+/// ```
+pub fn drilled_hole(input: &str) -> IResult<&str, Hole> {
     let (remaining, (diameter, x, y, plating_style, associated_part, hole_type, owner)) = (
         terminated(float, tag(" ")),                          // diameter
         terminated(float, tag(" ")),                          // x coordinate
@@ -45,6 +59,24 @@ fn drilled_hole(input: &str) -> IResult<&str, Hole> {
     Ok((remaining, hole))
 }
 
+/// Parses a section of drilled holes from the input string.
+/// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=25
+///
+/// # Example
+///
+/// ```
+/// use idf_parser::drilled_holes::{drilled_holes_section, Hole};
+///         let input = ".DRILLED_HOLES
+/// 30.0 1800.0 100.0 PTH J1 PIN ECAD
+/// 30.0 1700.0 100.0 PTH J1 PIN ECAD
+/// 30.0 1600.0 100.0 PTH J1 PIN ECAD
+/// 93.0 0.0 4800.0 NPTH BOARD TOOL MCAD
+/// 93.0 0.0 0.0 PTH BOARD MTG UNOWNED
+/// .END_DRILLED_HOLES";
+///
+/// let (remaining, holes) = drilled_holes_section(input).unwrap();
+/// assert_eq!(holes[0].owner, "ECAD");
+/// ```
 pub fn drilled_holes_section(input: &str) -> IResult<&str, Vec<Hole>> {
     delimited(
         ws(tag(".DRILLED_HOLES\n")),
@@ -57,7 +89,6 @@ pub fn drilled_holes_section(input: &str) -> IResult<&str, Vec<Hole>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::error::Error;
     #[test]
     fn test_drilled_hole() {
         let input = "30.0 1800.0 100.0 PTH J1 PIN ECAD";

@@ -1,4 +1,4 @@
-use crate::idf_v3::primitives::{point, ws, Point};
+use crate::primitives::{point, ws, Point};
 use nom::bytes::complete::{is_not, tag};
 use nom::multi::{many0, many_m_n};
 use nom::number::complete::float;
@@ -17,8 +17,10 @@ struct ComponentProperties {
     junction_case_thermal_resistance: Option<f32>,  // °C / watt
 }
 
+/// Represents an electrical component in the IDF format.
+/// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=31
 pub struct ElectricalComponent {
-    geometry_name: String,
+    pub geometry_name: String,
     part_number: String,
     units: String,
     height: f32,
@@ -26,8 +28,10 @@ pub struct ElectricalComponent {
     properties: ComponentProperties,
 }
 
+/// Represents a mechanical component in the IDF format.
+/// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=34
 pub struct MechanicalComponent {
-    geometry_name: String,
+    pub geometry_name: String,
     part_number: String,
     units: String,
     height: f32,
@@ -48,6 +52,7 @@ fn get_component<'a>(input: &'a str, prop: &str) -> IResult<&'a str, Option<f32>
     }
 }
 
+/// Parses the properties of an electrical or mechanical component from the input string.
 fn properties(input: &str) -> IResult<&str, ComponentProperties> {
     let (remaining, capacitance) = get_component(input, "CAPACITANCE")?;
     let (remaining, resistance) = get_component(remaining, "RESISTANCE")?;
@@ -72,6 +77,22 @@ fn properties(input: &str) -> IResult<&str, ComponentProperties> {
     Ok((remaining, component))
 }
 
+/// Parses an electrical component from the input string.
+/// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=31
+///
+/// # Example
+///
+/// ```
+/// use idf_parser::components::electrical_component;
+///
+/// let input = ".ELECTRICAL
+/// cs13_a pn-cap THOU 150.0
+/// 0 -55.0 55.0 0.0
+/// .END_ELECTRICAL";
+///
+/// let (remaining, component) = electrical_component(input).unwrap();
+/// assert_eq!(component.geometry_name, "cs13_a");
+/// ```
 pub fn electrical_component(input: &str) -> IResult<&str, ElectricalComponent> {
     let (remaining, (geometry_name, part_number, units, height, outline, properties)) = (
         delimited(ws(tag(".ELECTRICAL")), is_not(" "), tag(" ")), // geometry name
@@ -96,10 +117,12 @@ pub fn electrical_component(input: &str) -> IResult<&str, ElectricalComponent> {
 }
 
 /// Parses a mechanical component from the input string.
-/// 
+/// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=34
 /// # Example
 /// 
 /// ```
+/// use idf_parser::components::mechanical_component;
+///
 /// let input = ".MECHANICAL
 /// cs13_a pn-cap THOU 150.0
 /// 0 -55.0 55.0 0.0
@@ -107,6 +130,7 @@ pub fn electrical_component(input: &str) -> IResult<&str, ElectricalComponent> {
 /// .END_MECHANICAL";
 /// 
 /// let (remaining, component) = mechanical_component(input).unwrap();
+/// assert_eq!(component.geometry_name, "cs13_a");
 /// ```
 pub fn mechanical_component(input: &str) -> IResult<&str, MechanicalComponent> {
     let (remaining, (geometry_name, part_number, units, height, outline)) = (

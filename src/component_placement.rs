@@ -1,6 +1,6 @@
 use nom::branch::alt;
 
-use crate::idf_v3::primitives::ws;
+use crate::primitives::ws;
 use nom::bytes::complete::{is_not, tag};
 use nom::multi::many0;
 use nom::number::complete::float;
@@ -8,6 +8,7 @@ use nom::sequence::delimited;
 use nom::IResult;
 use nom::Parser;
 
+/// Represents a component placement in the IDF format.
 #[derive(Debug, PartialEq)]
 pub struct ComponentPlacement {
     package_name: String,
@@ -21,7 +22,17 @@ pub struct ComponentPlacement {
     placement_status: String, // "PLACED", "UNPLACED", "ECAD", "MCAD"
 }
 
-fn component_placement(input: &str) -> IResult<&str, ComponentPlacement> {
+/// Parses a single component placement from the input string.
+/// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=27
+///
+/// # Example
+///
+/// ```
+/// use idf_parser::component_placement::{component_placement, ComponentPlacement};
+/// let input = "cs13_a pn-cap C1\n4000.0 1000.0 100.0 0.0 TOP PLACED";
+/// let (remaining, component_placement) = component_placement(input).unwrap();
+/// ```
+pub fn component_placement(input: &str) -> IResult<&str, ComponentPlacement> {
     let (
         remaining,
         (
@@ -69,8 +80,19 @@ fn component_placement(input: &str) -> IResult<&str, ComponentPlacement> {
 }
 
 /// Parses a section of component placements from the input string.
-/// 
-/// The section starts with `.PLACEMENT` and ends with `.END_PLACEMENT`.
+/// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=27
+///
+/// # Example
+///
+/// ```
+/// use idf_parser::component_placement::{component_placement_section, ComponentPlacement};
+/// let input = ".PLACEMENT
+/// cs13_a pn-cap C1
+/// 4000.0 1000.0 100.0 0.0 TOP PLACED
+/// .END_PLACEMENT";
+///
+/// let (remaining, component_placements) = component_placement_section(input).unwrap();
+/// ```
 pub fn component_placement_section(input: &str) -> IResult<&str, Vec<ComponentPlacement>> {
     delimited(
         ws(tag(".PLACEMENT")),              // section header

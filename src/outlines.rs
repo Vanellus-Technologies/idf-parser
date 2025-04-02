@@ -1,20 +1,32 @@
 use nom::branch::alt;
 use nom::sequence::{delimited, terminated};
 
-use crate::idf_v3::primitives;
-use crate::idf_v3::primitives::{owner, ws, Point};
+use crate::primitives;
+use crate::primitives::{owner, ws, Point};
 use nom::bytes::complete::{is_not, tag};
 use nom::multi::many1;
 use nom::number::complete::float;
 use nom::IResult;
 use nom::Parser;
 
+/// Board/panel outline.
+/// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=10
+///
+/// This section defines the board or panel outline and its internal cutouts as a 2D profile with
+/// thickness. The outline and cutouts consist of simple closed curves made up of arcs and lines.
+/// Only one outline may be specified, but multiple cutouts are allowed.
 pub struct BoardOutline {
     owner: String, // MCAD, ECAD or UNOWNED
     thickness: f32,
     outline: Vec<Point>,
 }
 
+/// Other outline.
+/// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=11
+///
+/// This section defines an additional outline with cutouts that can be used for other purposes than
+/// the board outline such as for defining a heatsink or board core. The outline and cutouts consist of
+/// simple closed curves made up of arcs and lines. Multiple other outline sections may be specified.
 pub struct OtherOutline {
     owner: String, // MCAD, ECAD or UNOWNED
     id: String,
@@ -22,12 +34,27 @@ pub struct OtherOutline {
     board_side: String, // TOP or BOTTOM
     outline: Vec<Point>,
 }
+
+/// Routing outline.
+/// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=14
+///
+/// This section defines a routing outline for the board or panel. Each routing outline specifies a
+/// region within which routing must be confined, and consists of a simple closed curve made up of
+/// arcs and lines. Portions of routing outlines on a panel that lie on a board in the panel are inherited
+/// by that board. Multiple routing outlines may be defined.
 pub struct RoutingOutline {
     owner: String,          // MCAD, ECAD or UNOWNED
     routing_layers: String, // TOP, BOTTOM, BOTH, INNER or ALL
     outline: Vec<Point>,
 }
 
+/// Placement outline.
+/// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=16
+///
+/// This section defines a placement outline for the board or panel. Each placement outline specifies
+/// a region within which components must be placed, and consists of a simple closed curve made up
+/// of arcs and lines plus a height restriction. Portions of placement outlines on a panel that lie on a
+/// board in the panel are inherited by that board. Multiple placement outlines may be defined.
 pub struct PlacementOutline {
     owner: String,       // MCAD, ECAD or UNOWNED
     board_side: String,  // TOP, BOTTOM or BOTH
@@ -35,17 +62,43 @@ pub struct PlacementOutline {
     outline: Vec<Point>,
 }
 
+/// Routing keepout.
+/// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=18
+///
+/// This section defines a routing keepout for the board or panel. Routing keepouts specify regions
+/// where routing is not allowed. Routing keepouts can exist on top, bottom, both top and bottom,
+/// or all routing layers. Each keepout consists of a simple closed curve made up of arcs and lines.
+/// Portions of routing keepouts on a panel that lie on a board in the panel are inherited by that board.
+/// Multiple keepouts are allowed.
 pub struct RoutingKeepout {
     owner: String,          // MCAD, ECAD or UNOWNED
     routing_layers: String, // TOP, BOTTOM, BOTH, INNER or ALL
     outline: Vec<Point>,
 }
 
+/// Via keepout.
+/// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=20
+///
+/// This section defines a via keepout for the board or panel. Via keepouts specify regions where vias
+/// are not allowed (although routing is still allowed). Each keepout consists of a simple closed curve
+/// made up of arcs and lines. Portions of via keepouts on a panel that lie on a board in the panel are
+/// inherited by that board. Multiple via keepouts are allowed. Only through vias (vias that go all the
+/// way through the board) are supported.
 pub struct ViaKeepout {
     owner: String, // MCAD, ECAD or UNOWNED
     outline: Vec<Point>,
 }
 
+/// Placement keepout.
+/// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=21
+///
+/// This section defines a placement keepout for the board or panel. Placement keepouts specify
+/// regions on the board where components cannot be placed. A keepout can apply to all
+/// components, or to only those components above a specified height. Placement keepouts can exist
+/// on the top, bottom, or both top and bottom of the board or panel. Each keepout consists of a
+/// simple closed curve made up of arcs and lines along with a height restriction. Portions of
+/// placement keepouts on a panel that lie on a board in the panel are inherited by that board.
+/// Multiple keepouts are allowed.
 pub struct PlacementKeepout {
     owner: String,       // MCAD, ECAD or UNOWNED
     board_side: String,  // TOP, BOTTOM or BOTH
@@ -53,6 +106,14 @@ pub struct PlacementKeepout {
     outline: Vec<Point>,
 }
 
+/// Placement group area.
+/// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=23
+///
+/// This section specifies an area where a group of related components is to be placed. For example,
+/// it may be desirable to place all analog components in a particular area for thermal considerations.
+/// Each placement group area consists of a simple closed curve made up of arcs and lines along with
+/// a name designating the group of components to be placed in that area. Multiple areas are
+/// allowed.
 pub struct PlacementGroupArea {
     owner: String,      // MCAD, ECAD or UNOWNED
     board_side: String, // TOP, BOTTOM or BOTH
@@ -227,7 +288,7 @@ pub fn parse_placement_group_area(input: &str) -> IResult<&str, PlacementGroupAr
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::idf_v3::primitives::point;
+    use crate::primitives::point;
     #[test]
     fn test_parse_board_outline() {
         let input = ".BOARD_OUTLINE MCAD

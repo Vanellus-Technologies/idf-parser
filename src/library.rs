@@ -1,17 +1,19 @@
-use crate::idf_v3::components::{
+use crate::components::{
     electrical_component, mechanical_component, ElectricalComponent, MechanicalComponent,
 };
-use crate::idf_v3::headers::{library_header, LibraryHeader};
+use crate::headers::{library_header, LibraryHeader};
 use nom::multi::many0;
 use nom::{IResult, Parser};
 
-struct Library {
+pub(crate) struct Library {
     header: LibraryHeader,
     electrical_components: Vec<ElectricalComponent>,
     mechanical_components: Vec<MechanicalComponent>,
 }
 
-fn library(input: &str) -> IResult<&str, Library> {
+/// Parses a library emp file which contains detail on electrical and mechanical components.
+/// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=29
+pub(crate) fn library(input: &str) -> IResult<&str, Library> {
     let (remaining, (header, electrical_components, mechanical_components)) = (
         library_header,
         many0(electrical_component),

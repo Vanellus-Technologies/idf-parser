@@ -1,99 +1,5 @@
-use crate::component_placement::{component_placement_section, ComponentPlacement};
-use crate::drilled_holes::{drilled_holes_section, Hole};
-use crate::headers::{board_header, BoardHeader};
-use crate::notes::{notes_section, Note};
-use crate::outlines::{
-    parse_board_outline, parse_other_outline, parse_placement_group_area, parse_placement_keepout, parse_placement_outline,
-    parse_routing_keepout, parse_routing_outline, parse_via_keepout, BoardOutline, OtherOutline,
-    PlacementGroupArea, PlacementKeepout, PlacementOutline,
-    RoutingKeepout, RoutingOutline, ViaKeepout,
-};
-use crate::primitives::ws;
-use nom::multi::{many0, many_m_n};
-use nom::{IResult, Parser};
-
-/// Represents a board or panel file in the IDF format.
-pub struct Board {
-    header: BoardHeader,
-    outline: BoardOutline,
-    other_outlines: Vec<OtherOutline>,
-    routing_outlines: Vec<RoutingOutline>,
-    placement_outlines: Vec<PlacementOutline>,
-    routing_keepouts: Vec<RoutingKeepout>,
-    via_keepouts: Vec<ViaKeepout>,
-    placement_keepouts: Vec<PlacementKeepout>,
-    placement_group_areas: Vec<PlacementGroupArea>,
-    drilled_holes: Vec<Hole>,
-    notes: Vec<Note>,
-    component_placements: Vec<ComponentPlacement>,
-}
-
-/// Parse the content of a board or panel .emn file into a Board struct.
-/// File specification: http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=8
-pub fn board(input: &str) -> IResult<&str, Board> {
-    let (
-        remaining,
-        (
-            header,
-            outline,
-            other_outlines,
-            routing_outlines,
-            placement_outlines,
-            routing_keepouts,
-            via_keepouts,
-            placement_keepouts,
-            placement_group_areas,
-            drilled_holes,
-            wrapped_notes,
-            component_placements,
-        ),
-    ) = (
-        board_header,
-        ws(parse_board_outline),
-        many0(parse_other_outline),
-        many0(parse_routing_outline),
-        many0(parse_placement_outline),
-        many0(parse_routing_keepout),
-        many0(parse_via_keepout),
-        many0(parse_placement_keepout),
-        many0(parse_placement_group_area),
-        drilled_holes_section,
-        many_m_n(0, 1, notes_section),
-        component_placement_section,
-    )
-        .parse(input)?;
-
-    let notes: Vec<Note> = if wrapped_notes.len() > 1 {
-        wrapped_notes[0].clone()
-    } else {
-        Vec::new()
-    };
-
-    let board = Board {
-        header,
-        outline,
-        other_outlines,
-        routing_outlines,
-        placement_outlines,
-        routing_keepouts,
-        via_keepouts,
-        placement_keepouts,
-        placement_group_areas,
-        drilled_holes,
-        notes,
-        component_placements,
-    };
-
-    Ok((remaining, board))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn test_board() {
-        let input = ".HEADER
-BOARD_FILE 3.0 \"Sample File Generator\" 10/22/96.16:02:44 1
+.HEADER
+BOARD_FILE 3.0 "Sample File Generator" 10/22/96.16:02:44 1
 sample_board THOU
 .END_HEADER
 .BOARD_OUTLINE MCAD
@@ -287,9 +193,9 @@ TOP 300.0
 93.0 0.0 0.0 PTH BOARD MTG UNOWNED
 .END_DRILLED_HOLES
 .NOTES
-3500.0 3300.0 75.0 2500.0 \"This component rotated 14 degrees\"
-400.0 4400.0 75.0 3200.0 \"Component height limited by enclosure latch\"
-1800.0 300.0 75.0 1700.0 \"Do not move connectors!\"
+3500.0 3300.0 75.0 2500.0 "This component rotated 14 degrees"
+400.0 4400.0 75.0 3200.0 "Component height limited by enclosure latch"
+1800.0 300.0 75.0 1700.0 "Do not move connectors!"
 .END_NOTES
 .PLACEMENT
 cs13_a pn-cap C1
@@ -314,54 +220,4 @@ dip_14w pn-hs346-dip U3
 3000.0 3300.0 0.0 14.0 TOP PLACED
 dip_14w pn-hs346-dip U4
 2200.0 2500.0 0.0 270.0 TOP PLACED
-.END_PLACEMENT";
-
-        let (remaining, board) = board(input).unwrap();
-        assert_eq!(remaining, "");
-    }
-    #[test]
-    fn test_board_with_invalid_input() {
-        let input = ".HEADER
-PANEL_FILE 3.0 \"Sample File Generator\" 10/22/96.16:20:19 1
-sample_panel THOU
-.END_HEADER
-.PANEL_OUTLINE MCAD
-62.0
-0 0.0 0.0 0.0
-0 16000.0 0.0 0.0
-0 16000.0 12000.0 0.0
-0 0.0 12000.0 0.0
-0 0.0 0.0 0.0
-.END_PANEL_OUTLINE
-.PLACE_KEEPOUT MCAD
-BOTTOM 0.0
-0 13500.0 0.0 0.0
-0 16000.0 0.0 0.0
-0 16000.0 12000.0 0.0
-0 13500.0 12000.0 0.0
-0 13500.0 0.0 0.0
-.END_PLACE_KEEPOUT
-.PLACE_KEEPOUT MCAD
-BOTTOM 0.0
-0 0.0 0.0 0.0
-0 2200.0 0.0 0.0
-0 2200.0 12000.0 0.0
-0 0.0 12000.0 0.0
-0 0.0 0.0 0.0
-.END_PLACE_KEEPOUT
-.DRILLED_HOLES
-250.0 15500.0 11500.0 NPTH PANEL TOOL MCAD
-250.0 500.0 11500.0 NPTH PANEL TOOL MCAD
-250.0 500.0 500.0 NPTH PANEL TOOL MCAD
-.END_DRILLED_HOLES
-.PLACEMENT
-sample_board pn-board BOARD
-1700.0 3300.0 0.0 0.0 TOP MCAD
-sample_board pn-board BOARD
-14000.0 3300.0 0.0 0.0 BOTTOM MCAD
-.END_PLACEMENT";
-
-        let (remaining, board) = board(input).unwrap();
-        assert_eq!(remaining, "");
-    }
-}
+.END_PLACEMENT

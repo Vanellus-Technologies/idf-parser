@@ -1,13 +1,20 @@
-use crate::idf_v3::primitives::ws;
+use crate::primitives::ws;
 use nom::bytes::complete::{is_not, tag};
-use nom::multi::{many0, many1};
+use nom::multi::many1;
 use nom::number::complete::float;
 use nom::sequence::delimited;
 use nom::IResult;
 use nom::Parser;
 
-#[derive(PartialEq, Debug)]
-#[derive(Clone)]
+/// A board or panel file note.
+/// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=26
+///
+/// This section contains notes for the design that can be displayed in the receiving system, to allow
+/// the electrical and mechanical designers to communciate additional information about the design
+/// entities beyond that conveyed by the entities themselves. Notes are not intended to be used for
+/// rigorous translations of text such as for transferring manufacturing drawings. The association of a
+/// note to its subject is inferred by its location.
+#[derive(PartialEq, Debug, Clone)]
 pub struct Note {
     x: f32,
     y: f32,
@@ -35,6 +42,19 @@ fn note(input: &str) -> IResult<&str, Note> {
     Ok((remaining, note))
 }
 
+/// Parses a section of notes from the input string.
+///
+/// # Example
+/// ```
+/// use idf_parser::notes::notes_section;
+/// let input = ".NOTES
+/// 3500.0 3300.0 75.0 2500.0 \"This component rotated 14 degrees\"
+/// 400.0 4400.0 75.0 3200.0 \"Component height limited by enclosure latch\"
+/// .END_NOTES";
+///
+/// let (remaining, notes) = notes_section(input).unwrap();
+/// assert_eq!(notes.len(), 2);
+/// ```
 pub fn notes_section(input: &str) -> IResult<&str, Vec<Note>> {
     delimited(tag(".NOTES\n"), many1(ws(note)), tag(".END_NOTES")).parse(input)
 }

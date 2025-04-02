@@ -7,6 +7,7 @@ use nom::{
     character::complete::multispace0, error::ParseError, sequence::delimited, IResult, Parser,
 };
 
+/// Determine the owner of an element.
 pub fn owner(input: &str) -> IResult<&str, &str> {
     alt((tag("ECAD"), tag("MCAD"), tag("UNOWNED"))).parse(input)
 }
@@ -20,18 +21,29 @@ where
     delimited(multispace0, inner, multispace0)
 }
 
-/// units
-pub const MM: &str = "MM"; // millimeters
-pub const THOU: &str = "THOU"; // mils (thousandths of an inch)
-
+/// Represents a point in a loop.
 #[derive(Debug, PartialEq)]
 pub struct Point {
-    pub label: u32, // 0 for counter-clockwise, 1 for clockwise
+    /// The label of the point, 0 for counter-clockwise, 1 for clockwise.
+    pub label: u32,
+    /// The x coordinate of the point.
     pub x: f32,
+    /// The y coordinate of the point.
     pub y: f32,
+    /// 0 for a straight line, between 0 and 360 for an arc, 360 for a full circle.
     pub angle: f32,
 }
 
+/// Parses a point from the input string.
+///
+/// # Example
+/// ```
+/// use idf_parser::primitives::{point, Point};
+/// let input = "0 100.0 200.0 45.0";
+///
+/// let (remaining, point) = point(input).unwrap();
+/// assert_eq!(point, Point { label: 0, x: 100.0, y: 200.0, angle: 45.0 });
+/// ```
 pub fn point(input: &str) -> IResult<&str, Point> {
     let (remaining, (label, x, y, angle)) = (
         u32,
@@ -42,8 +54,4 @@ pub fn point(input: &str) -> IResult<&str, Point> {
         .parse(input)?;
     let point = Point { label, x, y, angle };
     Ok((remaining, point))
-}
-
-pub fn units(input: &str) -> IResult<&str, &str> {
-    alt((tag(MM), tag(THOU))).parse(input)
 }
