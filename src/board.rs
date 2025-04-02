@@ -151,6 +151,7 @@ cc1210 pn-cc1210 C3
 
         let (remaining, board) = parse_board(input).unwrap();
         assert_eq!(remaining, "");
+        assert_eq!(board.component_placements.len(), 3);
     }
     #[test]
     fn test_parse_panel() {
@@ -188,5 +189,6 @@ sample_board pn-board BOARD
 
         let (remaining, board) = parse_board(input).unwrap();
         assert_eq!(remaining, "");
+        assert_eq!(board.component_placements.len(), 1);
     }
 }

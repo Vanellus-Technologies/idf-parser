@@ -66,5 +66,6 @@ plcc_20 pn-pal16l8-plcc THOU 14.0
 .END_ELECTRICAL";
         let (remaining, library) = parse_library(input).unwrap();
         assert_eq!(remaining, "");
+        assert_eq!(library.electrical_components.len(), 5);
     }
 }
