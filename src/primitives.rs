@@ -4,7 +4,7 @@ use nom::character::complete::u32;
 use nom::number::complete::float;
 use nom::sequence::preceded;
 use nom::{
-    character::complete::multispace0, error::ParseError, sequence::delimited, IResult, Parser,
+    IResult, Parser, character::complete::multispace0, error::ParseError, sequence::delimited,
 };
 
 /// Determine the owner of an element.

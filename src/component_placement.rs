@@ -1,12 +1,12 @@
 use nom::branch::alt;
 
 use crate::primitives::ws;
+use nom::IResult;
+use nom::Parser;
 use nom::bytes::complete::{is_not, tag};
 use nom::multi::many0;
 use nom::number::complete::float;
 use nom::sequence::delimited;
-use nom::IResult;
-use nom::Parser;
 
 /// Represents a component placement in the IDF format.
 #[derive(Debug, PartialEq)]
@@ -95,9 +95,9 @@ pub fn component_placement(input: &str) -> IResult<&str, ComponentPlacement> {
 /// ```
 pub fn component_placement_section(input: &str) -> IResult<&str, Vec<ComponentPlacement>> {
     delimited(
-        ws(tag(".PLACEMENT")),              // section header
+        ws(tag(".PLACEMENT")),          // section header
         ws(many0(component_placement)), // parse all component placements
-        ws(tag(".END_PLACEMENT")),          // section footer
+        ws(tag(".END_PLACEMENT")),      // section footer
     )
     .parse(input)
 }

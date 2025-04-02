@@ -1,7 +1,7 @@
 use crate::components::{
-    electrical_component, mechanical_component, ElectricalComponent, MechanicalComponent,
+    ElectricalComponent, MechanicalComponent, electrical_component, mechanical_component,
 };
-use crate::headers::{library_header, LibraryHeader};
+use crate::headers::{LibraryHeader, library_header};
 use nom::multi::many0;
 use nom::{IResult, Parser};
 

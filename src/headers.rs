@@ -2,9 +2,9 @@ use nom::branch::alt;
 use nom::sequence::{delimited, preceded, terminated};
 
 use crate::primitives::ws;
-use nom::bytes::complete::{is_not, tag};
 use nom::IResult;
 use nom::Parser;
+use nom::bytes::complete::{is_not, tag};
 
 const PANEL: &str = "PANEL_FILE";
 const LIBRARY: &str = "LIBRARY_FILE";
@@ -77,10 +77,7 @@ pub fn board_header(input: &str) -> IResult<&str, BoardHeader> {
         preceded(header_start, header_metadata).parse(input)?;
 
     let (remaining, (board_name, units)) =
-        terminated(ws((
-            board_name,
-            alt((tag("THOU"), tag("MM"))),
-        )), header_end).parse(remaining)?;
+        terminated(ws((board_name, alt((tag("THOU"), tag("MM"))))), header_end).parse(remaining)?;
 
     let header = BoardHeader {
         version,

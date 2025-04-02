@@ -1,15 +1,15 @@
-use crate::component_placement::{component_placement_section, ComponentPlacement};
-use crate::drilled_holes::{parse_drilled_holes_section, Hole};
-use crate::headers::{board_header, BoardHeader};
-use crate::notes::{notes_section, Note};
+use crate::component_placement::{ComponentPlacement, component_placement_section};
+use crate::drilled_holes::{Hole, parse_drilled_holes_section};
+use crate::headers::{BoardHeader, board_header};
+use crate::notes::{Note, notes_section};
 use crate::outlines::{
-    parse_board_outline, parse_other_outline, parse_placement_group_area, parse_placement_keepout, parse_placement_outline,
-    parse_routing_keepout, parse_routing_outline, parse_via_keepout, BoardOutline, OtherOutline,
-    PlacementGroupArea, PlacementKeepout, PlacementOutline,
-    RoutingKeepout, RoutingOutline, ViaKeepout,
+    BoardOutline, OtherOutline, PlacementGroupArea, PlacementKeepout, PlacementOutline,
+    RoutingKeepout, RoutingOutline, ViaKeepout, parse_board_outline, parse_other_outline,
+    parse_placement_group_area, parse_placement_keepout, parse_placement_outline,
+    parse_routing_keepout, parse_routing_outline, parse_via_keepout,
 };
 use crate::primitives::ws;
-use nom::multi::{many0, many_m_n};
+use nom::multi::{many_m_n, many0};
 use nom::{IResult, Parser};
 
 /// Represents a board or panel file in the IDF format.

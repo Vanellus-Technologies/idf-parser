@@ -2,12 +2,12 @@ use nom::branch::alt;
 use nom::sequence::{delimited, terminated};
 
 use crate::primitives;
-use crate::primitives::{owner, ws, Point};
+use crate::primitives::{Point, owner, ws};
+use nom::IResult;
+use nom::Parser;
 use nom::bytes::complete::{is_not, tag};
 use nom::multi::many1;
 use nom::number::complete::float;
-use nom::IResult;
-use nom::Parser;
 
 /// Board/panel outline.
 /// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=10

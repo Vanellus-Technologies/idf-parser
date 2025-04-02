@@ -1,10 +1,10 @@
-use crate::primitives::{point, ws, Point};
-use nom::bytes::complete::{is_not, tag};
-use nom::multi::{many0, many_m_n};
-use nom::number::complete::float;
-use nom::sequence::{delimited, preceded, terminated};
+use crate::primitives::{Point, point, ws};
 use nom::IResult;
 use nom::Parser;
+use nom::bytes::complete::{is_not, tag};
+use nom::multi::{many_m_n, many0};
+use nom::number::complete::float;
+use nom::sequence::{delimited, preceded, terminated};
 
 struct ComponentProperties {
     capacitance: Option<f32>,                       // microfarads
@@ -96,11 +96,11 @@ fn properties(input: &str) -> IResult<&str, ComponentProperties> {
 pub fn electrical_component(input: &str) -> IResult<&str, ElectricalComponent> {
     let (remaining, (geometry_name, part_number, units, height, outline, properties)) = (
         delimited(ws(tag(".ELECTRICAL")), is_not(" "), tag(" ")), // geometry name
-        ws(is_not(" ")),                                        // part number
-        ws(is_not(" ")),                                        // units
-        ws(float),                                              // height
-        many0(ws(point)),                                       // outline
-        terminated(properties, tag(".END_ELECTRICAL")),         // outline
+        ws(is_not(" ")),                                          // part number
+        ws(is_not(" ")),                                          // units
+        ws(float),                                                // height
+        many0(ws(point)),                                         // outline
+        terminated(properties, tag(".END_ELECTRICAL")),           // outline
     )
         .parse(input)?;
 
@@ -119,7 +119,7 @@ pub fn electrical_component(input: &str) -> IResult<&str, ElectricalComponent> {
 /// Parses a mechanical component from the input string.
 /// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=34
 /// # Example
-/// 
+///
 /// ```
 /// use idf_parser::components::mechanical_component;
 ///
@@ -128,17 +128,17 @@ pub fn electrical_component(input: &str) -> IResult<&str, ElectricalComponent> {
 /// 0 -55.0 55.0 0.0
 /// 0 -55.0 -55.0 0.0
 /// .END_MECHANICAL";
-/// 
+///
 /// let (remaining, component) = mechanical_component(input).unwrap();
 /// assert_eq!(component.geometry_name, "cs13_a");
 /// ```
 pub fn mechanical_component(input: &str) -> IResult<&str, MechanicalComponent> {
     let (remaining, (geometry_name, part_number, units, height, outline)) = (
         delimited(ws(tag(".MECHANICAL")), is_not(" "), tag(" ")), // geometry name
-        ws(is_not(" ")),                                        // part number
-        ws(is_not(" ")),                                        // units
-        ws(float),                                              // height
-        terminated(many0(ws(point)), tag(".END_MECHANICAL")),   // outline
+        ws(is_not(" ")),                                          // part number
+        ws(is_not(" ")),                                          // units
+        ws(float),                                                // height
+        terminated(many0(ws(point)), tag(".END_MECHANICAL")),     // outline
     )
         .parse(input)?;
 

@@ -1,16 +1,16 @@
 use crate::primitives::ws;
+use nom::IResult;
+use nom::Parser;
 use nom::bytes::complete::{is_not, tag};
 use nom::multi::many1;
 use nom::number::complete::float;
 use nom::sequence::delimited;
-use nom::IResult;
-use nom::Parser;
 
 /// A board or panel file note.
 /// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=26
 ///
 /// This section contains notes for the design that can be displayed in the receiving system, to allow
-/// the electrical and mechanical designers to communciate additional information about the design
+/// the electrical and mechanical designers to communicate additional information about the design
 /// entities beyond that conveyed by the entities themselves. Notes are not intended to be used for
 /// rigorous translations of text such as for transferring manufacturing drawings. The association of a
 /// note to its subject is inferred by its location.
