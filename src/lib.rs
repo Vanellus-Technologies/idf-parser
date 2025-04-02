@@ -8,11 +8,10 @@
 //! use idf_parser::parse_board_file;
 //! use idf_parser::parse_library_file;
 //!
-//! let board = parse_board_file("path/to/board.emn").unwrap();
-//! let library = parse_library_file("path/to/library.emp").unwrap();
+//! let board = parse_board_file("src/board.emn").unwrap();
+//! let panel = parse_board_file("src/panel.emn").unwrap();
+//! let library = parse_library_file("src/library.emp").unwrap();
 //! ```
-//!
-//!
 
 pub mod board;
 pub mod component_placement;

@@ -5,7 +5,7 @@ use crate::headers::{library_header, LibraryHeader};
 use nom::multi::many0;
 use nom::{IResult, Parser};
 
-pub(crate) struct Library {
+pub struct Library {
     header: LibraryHeader,
     electrical_components: Vec<ElectricalComponent>,
     mechanical_components: Vec<MechanicalComponent>,
