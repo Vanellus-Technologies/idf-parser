@@ -63,16 +63,16 @@ fn header_metadata(input: &str) -> IResult<&str, (u32, String, String, u32)> {
 /// # Example
 ///
 /// ```
-/// use idf_parser::headers::{board_header, BoardHeader};
+/// use idf_parser::headers::{parse_board_header, BoardHeader};
 /// let input = ".HEADER
 /// BOARD_FILE 3.0 \"Sample File Generator\" 10/22/96.16:02:44 1
 /// sample_board THOU
 /// .END_HEADER";
 ///
-/// let (remaining, header) = board_header(input).unwrap();
+/// let (remaining, header) = parse_board_header(input).unwrap();
 /// assert_eq!(header.units, "THOU");
 /// ```
-pub fn board_header(input: &str) -> IResult<&str, BoardHeader> {
+pub fn parse_board_header(input: &str) -> IResult<&str, BoardHeader> {
     let (remaining, (version, system_id, date, file_version)) =
         preceded(header_start, header_metadata).parse(input)?;
 
@@ -96,16 +96,16 @@ pub fn board_header(input: &str) -> IResult<&str, BoardHeader> {
 /// # Example
 ///
 /// ```
-/// use idf_parser::headers::{library_header, LibraryHeader};
+/// use idf_parser::headers::{parse_library_header, LibraryHeader};
 ///
 /// let input = ".HEADER
 /// LIBRARY_FILE 3.0 \"Sample File Generator\" 10/22/96.16:41:37 1
 /// .END_HEADER\n";
 ///
-/// let (remaining, header) = library_header(input).unwrap();
+/// let (remaining, header) = parse_library_header(input).unwrap();
 /// assert_eq!(header.date, "10/22/96.16:41:37");
 /// ```
-pub fn library_header(input: &str) -> IResult<&str, LibraryHeader> {
+pub fn parse_library_header(input: &str) -> IResult<&str, LibraryHeader> {
     let (remaining, (version, system_id, date, file_version)) =
         delimited(header_start, header_metadata, header_end).parse(input)?;
 
@@ -139,7 +139,7 @@ BOARD_FILE 3.0 \"Sample File Generator\" 10/22/96.16:02:44 1
 sample_board THOU
 .END_HEADER\n other nonsense";
 
-        let (remaining, header) = board_header(input).unwrap();
+        let (remaining, header) = parse_board_header(input).unwrap();
         assert_eq!(remaining, "other nonsense");
         assert_eq!(header.version, 3);
         assert_eq!(header.system_id, "Sample File Generator");
@@ -154,7 +154,7 @@ sample_board THOU
 LIBRARY_FILE 3.0 \"Sample File Generator\" 10/22/96.16:41:37 1
 .END_HEADER\n";
 
-        let (remaining, header) = library_header(input).unwrap();
+        let (remaining, header) = parse_library_header(input).unwrap();
         assert_eq!(remaining, "");
         assert_eq!(header.version, 3);
         assert_eq!(header.system_id, "Sample File Generator");

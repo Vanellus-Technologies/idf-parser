@@ -1,7 +1,7 @@
-use crate::component_placement::{ComponentPlacement, component_placement_section};
+use crate::component_placement::{ComponentPlacement, parse_component_placement_section};
 use crate::drilled_holes::{Hole, parse_drilled_holes_section};
-use crate::headers::{BoardHeader, board_header};
-use crate::notes::{Note, notes_section};
+use crate::headers::{BoardHeader, parse_board_header};
+use crate::notes::{Note, parse_notes_section};
 use crate::outlines::{
     BoardOutline, OtherOutline, PlacementGroupArea, PlacementKeepout, PlacementOutline,
     RoutingKeepout, RoutingOutline, ViaKeepout, parse_board_outline, parse_other_outline,
@@ -48,7 +48,7 @@ pub fn parse_board(input: &str) -> IResult<&str, Board> {
             component_placements,
         ),
     ) = (
-        board_header,
+        parse_board_header,
         ws(parse_board_outline),
         many0(parse_other_outline),
         many0(parse_routing_outline),
@@ -58,8 +58,8 @@ pub fn parse_board(input: &str) -> IResult<&str, Board> {
         many0(parse_placement_keepout),
         many0(parse_placement_group_area),
         parse_drilled_holes_section,
-        many_m_n(0, 1, notes_section),
-        component_placement_section,
+        many_m_n(0, 1, parse_notes_section),
+        parse_component_placement_section,
     )
         .parse(input)?;
 

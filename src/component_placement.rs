@@ -85,15 +85,15 @@ pub fn component_placement(input: &str) -> IResult<&str, ComponentPlacement> {
 /// # Example
 ///
 /// ```
-/// use idf_parser::component_placement::{component_placement_section, ComponentPlacement};
+/// use idf_parser::component_placement::{parse_component_placement_section, ComponentPlacement};
 /// let input = ".PLACEMENT
 /// cs13_a pn-cap C1
 /// 4000.0 1000.0 100.0 0.0 TOP PLACED
 /// .END_PLACEMENT";
 ///
-/// let (remaining, component_placements) = component_placement_section(input).unwrap();
+/// let (remaining, component_placements) = parse_component_placement_section(input).unwrap();
 /// ```
-pub fn component_placement_section(input: &str) -> IResult<&str, Vec<ComponentPlacement>> {
+pub fn parse_component_placement_section(input: &str) -> IResult<&str, Vec<ComponentPlacement>> {
     delimited(
         ws(tag(".PLACEMENT")),          // section header
         ws(many0(component_placement)), // parse all component placements
@@ -138,7 +138,7 @@ dip_14w pn-hs346-dip U4
 2200.0 2500.0 0.0 270.0 TOP PLACED
 .END_PLACEMENT";
 
-        let (remaining, component_placements) = component_placement_section(input).unwrap();
+        let (remaining, component_placements) = parse_component_placement_section(input).unwrap();
         assert_eq!(remaining, "");
         assert_eq!(component_placements.len(), 4);
         assert_eq!(component_placements[0].package_name, "cs13_a");

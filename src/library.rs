@@ -1,7 +1,7 @@
 use crate::components::{
     ElectricalComponent, MechanicalComponent, electrical_component, mechanical_component,
 };
-use crate::headers::{LibraryHeader, library_header};
+use crate::headers::{LibraryHeader, parse_library_header};
 use nom::multi::many0;
 use nom::{IResult, Parser};
 
@@ -15,7 +15,7 @@ pub struct Library {
 /// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=29
 pub(crate) fn parse_library(input: &str) -> IResult<&str, Library> {
     let (remaining, (header, electrical_components, mechanical_components)) = (
-        library_header,
+        parse_library_header,
         many0(electrical_component),
         many0(mechanical_component),
     )

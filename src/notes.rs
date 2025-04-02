@@ -46,16 +46,16 @@ fn note(input: &str) -> IResult<&str, Note> {
 ///
 /// # Example
 /// ```
-/// use idf_parser::notes::notes_section;
+/// use idf_parser::notes::parse_notes_section;
 /// let input = ".NOTES
 /// 3500.0 3300.0 75.0 2500.0 \"This component rotated 14 degrees\"
 /// 400.0 4400.0 75.0 3200.0 \"Component height limited by enclosure latch\"
 /// .END_NOTES";
 ///
-/// let (remaining, notes) = notes_section(input).unwrap();
+/// let (remaining, notes) = parse_notes_section(input).unwrap();
 /// assert_eq!(notes.len(), 2);
 /// ```
-pub fn notes_section(input: &str) -> IResult<&str, Vec<Note>> {
+pub fn parse_notes_section(input: &str) -> IResult<&str, Vec<Note>> {
     delimited(tag(".NOTES\n"), many1(ws(note)), tag(".END_NOTES")).parse(input)
 }
 
@@ -107,7 +107,7 @@ mod tests {
                 text: "Do not move connectors!".to_string(),
             },
         ];
-        let (remaining, notes) = notes_section(input).unwrap();
+        let (remaining, notes) = parse_notes_section(input).unwrap();
         assert_eq!(notes, expected);
     }
 }
