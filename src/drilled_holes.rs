@@ -65,7 +65,7 @@ pub fn drilled_hole(input: &str) -> IResult<&str, Hole> {
 /// # Example
 ///
 /// ```
-/// use idf_parser::drilled_holes::{drilled_holes_section, Hole};
+/// use idf_parser::drilled_holes::{parse_drilled_holes_section, Hole};
 ///         let input = ".DRILLED_HOLES
 /// 30.0 1800.0 100.0 PTH J1 PIN ECAD
 /// 30.0 1700.0 100.0 PTH J1 PIN ECAD
@@ -74,10 +74,10 @@ pub fn drilled_hole(input: &str) -> IResult<&str, Hole> {
 /// 93.0 0.0 0.0 PTH BOARD MTG UNOWNED
 /// .END_DRILLED_HOLES";
 ///
-/// let (remaining, holes) = drilled_holes_section(input).unwrap();
+/// let (remaining, holes) = parse_drilled_holes_section(input).unwrap();
 /// assert_eq!(holes[0].owner, "ECAD");
 /// ```
-pub fn drilled_holes_section(input: &str) -> IResult<&str, Vec<Hole>> {
+pub fn parse_drilled_holes_section(input: &str) -> IResult<&str, Vec<Hole>> {
     delimited(
         ws(tag(".DRILLED_HOLES\n")),
         many1(terminated(drilled_hole, tag("\n"))),
@@ -113,7 +113,7 @@ mod tests {
 93.0 0.0 4800.0 NPTH BOARD TOOL MCAD
 93.0 0.0 0.0 PTH BOARD MTG UNOWNED
 .END_DRILLED_HOLES";
-        let (remaining, holes) = drilled_holes_section(input).unwrap();
+        let (remaining, holes) = parse_drilled_holes_section(input).unwrap();
         assert_eq!(remaining, "");
         assert_eq!(holes.len(), 5);
         assert_eq!(holes[0].diameter, 30.0);

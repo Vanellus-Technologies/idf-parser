@@ -30,7 +30,7 @@ pub fn parse_board_file(file_path: &str) -> Result<board::Board, String> {
     }
 
     let file = std::fs::read_to_string(file_path).map_err(|e| e.to_string())?;
-    let (remaining, board) = board::board(&file).map_err(|e| e.to_string())?;
+    let (remaining, board) = board::parse_board(&file).map_err(|e| e.to_string())?;
     if !remaining.is_empty() {
         return Err(format!("Unparsed data remaining: {}", remaining));
     }
@@ -43,7 +43,7 @@ pub fn parse_library_file(file_path: &str) -> Result<library::Library, String> {
     }
 
     let file = std::fs::read_to_string(file_path).map_err(|e| e.to_string())?;
-    let (remaining, library) = library::library(&file).map_err(|e| e.to_string())?;
+    let (remaining, library) = library::parse_library(&file).map_err(|e| e.to_string())?;
     if !remaining.is_empty() {
         return Err(format!("Unparsed data remaining: {}", remaining));
     }

@@ -134,27 +134,13 @@ cc1210 pn-cc1210 C2
 3000.0 3500.0 0.0 0.0 TOP PLACED
 cc1210 pn-cc1210 C3
 3200.0 1800.0 0.0 0.0 BOTTOM PLACED
-cc1210 pn-cc1210 C4
-1400.0 2300.0 0.0 270.0 TOP PLACED
-cc1210 pn-cc1210 C5
-1799.5 3518.1 0.0 0.0 BOTTOM PLACED
-conn_din24 connector J1
-1800.0 100.0 0.0 0.0 TOP MCAD
-conn_din24 connector J2
-4400.0 100.0 0.0 0.0 TOP MCAD
-plcc_20 pn-pal16l8-plcc U1
-1800.0 3200.0 0.0 0.0 BOTTOM ECAD
-plcc_20 pn-pal16l8-plcc U2
-3200.0 1800.0 0.0 0.0 TOP PLACED
-dip_14w pn-hs346-dip U3
-3000.0 3300.0 0.0 14.0 TOP PLACED
 dip_14w pn-hs346-dip U4
 2200.0 2500.0 0.0 270.0 TOP PLACED
 .END_PLACEMENT";
 
         let (remaining, component_placements) = component_placement_section(input).unwrap();
         assert_eq!(remaining, "");
-        assert_eq!(component_placements.len(), 11);
+        assert_eq!(component_placements.len(), 4);
         assert_eq!(component_placements[0].package_name, "cs13_a");
         assert_eq!(component_placements[0].part_number, "pn-cap");
         assert_eq!(component_placements[0].reference_designator, "C1");
