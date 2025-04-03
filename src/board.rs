@@ -1,21 +1,20 @@
 use crate::component_placement::{ComponentPlacement, parse_component_placement_section};
 use crate::drilled_holes::{Hole, parse_drilled_holes_section};
-use crate::headers::{BoardHeader, parse_board_header};
+use crate::headers::{BoardPanelHeader, parse_board_or_panel_header};
 use crate::notes::{Note, parse_notes_section};
 use crate::outlines::{
-    BoardOutline, OtherOutline, PlacementGroupArea, PlacementKeepout, PlacementOutline,
+    BoardPanelOutline, OtherOutline, PlacementGroupArea, PlacementKeepout, PlacementOutline,
     RoutingKeepout, RoutingOutline, ViaKeepout, parse_board_outline, parse_other_outline,
     parse_placement_group_area, parse_placement_keepout, parse_placement_outline,
     parse_routing_keepout, parse_routing_outline, parse_via_keepout,
 };
-use crate::primitives::ws;
 use nom::multi::{many_m_n, many0};
 use nom::{IResult, Parser};
 
 /// Represents a board or panel file in the IDF format.
-pub struct Board {
-    header: BoardHeader,
-    outline: BoardOutline,
+pub struct BoardPanel {
+    header: BoardPanelHeader,
+    outline: BoardPanelOutline,
     other_outlines: Vec<OtherOutline>,
     routing_outlines: Vec<RoutingOutline>,
     placement_outlines: Vec<PlacementOutline>,
@@ -30,7 +29,7 @@ pub struct Board {
 
 /// Parse the content of a board or panel .emn file into a Board struct.
 /// File specification: http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=8
-pub fn parse_board(input: &str) -> IResult<&str, Board> {
+pub fn parse_board_or_panel(input: &str) -> IResult<&str, BoardPanel> {
     let (
         remaining,
         (
@@ -48,8 +47,9 @@ pub fn parse_board(input: &str) -> IResult<&str, Board> {
             component_placements,
         ),
     ) = (
-        parse_board_header,
-        ws(parse_board_outline),
+        parse_board_or_panel_header,
+        parse_board_outline,
+        // expect there to be between 0 and n sections
         many0(parse_other_outline),
         many0(parse_routing_outline),
         many0(parse_placement_outline),
@@ -57,19 +57,23 @@ pub fn parse_board(input: &str) -> IResult<&str, Board> {
         many0(parse_via_keepout),
         many0(parse_placement_keepout),
         many0(parse_placement_group_area),
+        // expect one section
         parse_drilled_holes_section,
+        // expect either 0 or 1 sections
         many_m_n(0, 1, parse_notes_section),
+        // expect one section
         parse_component_placement_section,
     )
         .parse(input)?;
 
+    // Unwrap the notes section, if it exists. We expect there to be either 0 or 1 sections.
     let notes: Vec<Note> = if wrapped_notes.len() > 1 {
         wrapped_notes[0].clone()
     } else {
         Vec::new()
     };
 
-    let board = Board {
+    let board = BoardPanel {
         header,
         outline,
         other_outlines,
@@ -149,9 +153,10 @@ cc1210 pn-cc1210 C3
 3200.0 1800.0 0.0 0.0 BOTTOM PLACED
 .END_PLACEMENT";
 
-        let (remaining, board) = parse_board(input).unwrap();
+        let (remaining, board) = parse_board_or_panel(input).unwrap();
         assert_eq!(remaining, "");
         assert_eq!(board.component_placements.len(), 3);
+        assert_eq!(board.component_placements[0].package_name, "cs13_a");
     }
     #[test]
     fn test_parse_panel() {
@@ -187,8 +192,9 @@ sample_board pn-board BOARD
 1700.0 3300.0 0.0 0.0 TOP MCAD
 .END_PLACEMENT";
 
-        let (remaining, board) = parse_board(input).unwrap();
+        let (remaining, board) = parse_board_or_panel(input).unwrap();
         assert_eq!(remaining, "");
         assert_eq!(board.component_placements.len(), 1);
+        assert_eq!(board.component_placements[0].package_name, "sample_board");
     }
 }

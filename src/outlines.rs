@@ -1,13 +1,14 @@
 use nom::branch::alt;
 use nom::sequence::{delimited, terminated};
 
-use crate::primitives;
-use crate::primitives::{Point, owner, ws};
-use nom::IResult;
-use nom::Parser;
+use crate::primitives::{owner, ws, Point};
+use crate::{primitives, section};
 use nom::bytes::complete::{is_not, tag};
+use nom::character::complete::newline;
 use nom::multi::many1;
 use nom::number::complete::float;
+use nom::IResult;
+use nom::Parser;
 
 /// Board/panel outline.
 /// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=10
@@ -15,11 +16,39 @@ use nom::number::complete::float;
 /// This section defines the board or panel outline and its internal cutouts as a 2D profile with
 /// thickness. The outline and cutouts consist of simple closed curves made up of arcs and lines.
 /// Only one outline may be specified, but multiple cutouts are allowed.
-pub struct BoardOutline {
+pub struct BoardPanelOutline {
     owner: String, // MCAD, ECAD or UNOWNED
     thickness: f32,
     outline: Vec<Point>,
 }
+
+pub fn parse_board_outline(input: &str) -> IResult<&str, BoardPanelOutline> {
+    fn interior_contents(input: &str) -> IResult<&str, (&str, f32, Vec<Point>)> {
+        (
+            terminated(owner, newline),
+            terminated(float, newline),
+            many1(terminated(primitives::point, newline)),
+        )
+            .parse(input)
+    }
+
+    let (remaining, (owner, thickness, outline)) = ws(alt((
+        section!("BOARD_OUTLINE", interior_contents),
+        section!("PANEL_OUTLINE", interior_contents),
+    )))
+    .parse(input)?;
+
+    Ok((
+        remaining,
+        BoardPanelOutline {
+            owner: owner.to_string(),
+            thickness,
+            outline,
+        },
+    ))
+}
+
+/// Panel outline.
 
 /// Other outline.
 /// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=11
@@ -35,6 +64,31 @@ pub struct OtherOutline {
     outline: Vec<Point>,
 }
 
+pub fn parse_other_outline(input: &str) -> IResult<&str, OtherOutline> {
+    let (remaining, (owner, id, extrude_thickness, board_side, outline)) = section!(
+        "OTHER_OUTLINE",
+        (
+            terminated(owner, newline),                    // owner
+            terminated(is_not(" "), tag(" ")),             // ID
+            terminated(float, tag(" ")),                   // extrude_thickness
+            terminated(is_not("\n"), newline),             // board_side
+            many1(terminated(primitives::point, newline)), // outline
+        )
+    )
+    .parse(input)?;
+
+    Ok((
+        remaining,
+        OtherOutline {
+            owner: owner.to_string(),
+            id: id.to_string(),
+            extrude_thickness,
+            board_side: board_side.to_string(),
+            outline,
+        },
+    ))
+}
+
 /// Routing outline.
 /// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=14
 ///
@@ -46,6 +100,27 @@ pub struct RoutingOutline {
     owner: String,          // MCAD, ECAD or UNOWNED
     routing_layers: String, // TOP, BOTTOM, BOTH, INNER or ALL
     outline: Vec<Point>,
+}
+
+pub fn parse_routing_outline(input: &str) -> IResult<&str, RoutingOutline> {
+    let (remaining, (owner, routing_layers, outline)) = section!(
+        "ROUTE_OUTLINE",
+        (
+            terminated(owner, newline),
+            terminated(is_not("\n"), newline),
+            many1(terminated(primitives::point, newline)),
+        )
+    )
+    .parse(input)?;
+
+    Ok((
+        remaining,
+        RoutingOutline {
+            owner: owner.to_string(),
+            routing_layers: routing_layers.to_string(),
+            outline,
+        },
+    ))
 }
 
 /// Placement outline.
@@ -62,6 +137,29 @@ pub struct PlacementOutline {
     outline: Vec<Point>,
 }
 
+pub fn parse_placement_outline(input: &str) -> IResult<&str, PlacementOutline> {
+    let (remaining, (owner, board_side, outline_height, outline)) = section!(
+        "PLACE_OUTLINE",
+        (
+            terminated(owner, newline),                    // owner
+            terminated(is_not(" "), tag(" ")),             // board_side
+            terminated(float, newline),                    // outline_height
+            many1(terminated(primitives::point, newline)), // outline
+        )
+    )
+    .parse(input)?;
+
+    Ok((
+        remaining,
+        PlacementOutline {
+            owner: owner.to_string(),
+            board_side: board_side.to_string(),
+            outline_height,
+            outline,
+        },
+    ))
+}
+
 /// Routing keepout.
 /// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=18
 ///
@@ -76,6 +174,27 @@ pub struct RoutingKeepout {
     outline: Vec<Point>,
 }
 
+pub fn parse_routing_keepout(input: &str) -> IResult<&str, RoutingKeepout> {
+    let (remaining, (owner, routing_layers, outline)) = section!(
+        "ROUTE_KEEPOUT",
+        (
+            terminated(owner, newline),
+            terminated(is_not("\n"), newline),
+            many1(terminated(primitives::point, newline)),
+        )
+    )
+    .parse(input)?;
+
+    Ok((
+        remaining,
+        RoutingKeepout {
+            owner: owner.to_string(),
+            routing_layers: routing_layers.to_string(),
+            outline,
+        },
+    ))
+}
+
 /// Via keepout.
 /// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=20
 ///
@@ -87,6 +206,25 @@ pub struct RoutingKeepout {
 pub struct ViaKeepout {
     owner: String, // MCAD, ECAD or UNOWNED
     outline: Vec<Point>,
+}
+
+pub fn parse_via_keepout(input: &str) -> IResult<&str, ViaKeepout> {
+    let (remaining, (owner, outline)) = section!(
+        "VIA_KEEPOUT",
+        (
+            terminated(owner, newline),
+            many1(terminated(primitives::point, newline)),
+        )
+    )
+    .parse(input)?;
+
+    Ok((
+        remaining,
+        ViaKeepout {
+            owner: owner.to_string(),
+            outline,
+        },
+    ))
 }
 
 /// Placement keepout.
@@ -106,6 +244,29 @@ pub struct PlacementKeepout {
     outline: Vec<Point>,
 }
 
+pub fn parse_placement_keepout(input: &str) -> IResult<&str, PlacementKeepout> {
+    let (remaining, (owner, board_side, keepout_height, outline)) = section!(
+        "PLACE_KEEPOUT",
+        (
+            terminated(owner, newline),
+            terminated(is_not(" "), tag(" ")), // board_side
+            terminated(float, newline),        // keepout_height
+            many1(terminated(primitives::point, newline)), // outline
+        )
+    )
+    .parse(input)?;
+
+    Ok((
+        remaining,
+        PlacementKeepout {
+            owner: owner.to_string(),
+            board_side: board_side.to_string(),
+            keepout_height,
+            outline,
+        },
+    ))
+}
+
 /// Placement group area.
 /// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=23
 ///
@@ -121,158 +282,17 @@ pub struct PlacementGroupArea {
     outline: Vec<Point>,
 }
 
-pub fn parse_board_outline(input: &str) -> IResult<&str, BoardOutline> {
-    let (remaining, (owner, thickness, outline, _end)) = (
-        delimited(
-            ws(alt((tag(".BOARD_OUTLINE"), tag(".PANEL_OUTLINE")))),
-            owner,
-            tag("\n"),
-        ),
-        terminated(float, tag("\n")),
-        many1(terminated(primitives::point, tag("\n"))),
-        alt((tag(".END_BOARD_OUTLINE"), tag(".END_PANEL_OUTLINE"))),
-    )
-        .parse(input)?;
-
-    Ok((
-        remaining,
-        BoardOutline {
-            owner: owner.to_string(),
-            thickness,
-            outline,
-        },
-    ))
-}
-
-pub fn parse_other_outline(input: &str) -> IResult<&str, OtherOutline> {
-    let (remaining, (owner, id, extrude_thickness, board_side, outline, _end)) = (
-        delimited(tag(".OTHER_OUTLINE "), owner, tag("\n")), // owner
-        terminated(is_not(" "), tag(" ")),                   // ID
-        terminated(float, tag(" ")),                         // extrude_thickness
-        terminated(is_not("\n"), tag("\n")),                 // board_side
-        many1(terminated(primitives::point, tag("\n"))),     // outline
-        tag(".END_OTHER_OUTLINE"),
-    )
-        .parse(input)?;
-
-    Ok((
-        remaining,
-        OtherOutline {
-            owner: owner.to_string(),
-            id: id.to_string(),
-            extrude_thickness,
-            board_side: board_side.to_string(),
-            outline,
-        },
-    ))
-}
-
-pub fn parse_routing_outline(input: &str) -> IResult<&str, RoutingOutline> {
-    let (remaining, (owner, routing_layers, outline, _end)) = (
-        delimited(tag(".ROUTE_OUTLINE "), owner, tag("\n")),
-        terminated(is_not("\n"), tag("\n")),
-        many1(terminated(primitives::point, tag("\n"))),
-        tag(".END_ROUTE_OUTLINE"),
-    )
-        .parse(input)?;
-
-    Ok((
-        remaining,
-        RoutingOutline {
-            owner: owner.to_string(),
-            routing_layers: routing_layers.to_string(),
-            outline,
-        },
-    ))
-}
-
-pub fn parse_placement_outline(input: &str) -> IResult<&str, PlacementOutline> {
-    let (remaining, (owner, board_side, outline_height, outline, _end)) = (
-        delimited(ws(tag(".PLACE_OUTLINE ")), owner, tag("\n")),
-        terminated(is_not(" "), tag(" ")), // board_side
-        terminated(float, tag("\n")),      // outline_height
-        many1(terminated(primitives::point, tag("\n"))), // outline
-        tag(".END_PLACE_OUTLINE"),
-    )
-        .parse(input)?;
-
-    Ok((
-        remaining,
-        PlacementOutline {
-            owner: owner.to_string(),
-            board_side: board_side.to_string(),
-            outline_height,
-            outline,
-        },
-    ))
-}
-
-pub fn parse_routing_keepout(input: &str) -> IResult<&str, RoutingKeepout> {
-    let (remaining, (owner, routing_layers, outline, _end)) = (
-        delimited(ws(tag(".ROUTE_KEEPOUT ")), owner, tag("\n")),
-        terminated(is_not("\n"), tag("\n")),
-        many1(terminated(primitives::point, tag("\n"))),
-        tag(".END_ROUTE_KEEPOUT"),
-    )
-        .parse(input)?;
-
-    Ok((
-        remaining,
-        RoutingKeepout {
-            owner: owner.to_string(),
-            routing_layers: routing_layers.to_string(),
-            outline,
-        },
-    ))
-}
-
-pub fn parse_via_keepout(input: &str) -> IResult<&str, ViaKeepout> {
-    let (remaining, (owner, outline, _end)) = (
-        delimited(tag(".VIA_KEEPOUT "), owner, tag("\n")),
-        many1(terminated(primitives::point, tag("\n"))),
-        tag(".END_VIA_KEEPOUT"),
-    )
-        .parse(input)?;
-
-    Ok((
-        remaining,
-        ViaKeepout {
-            owner: owner.to_string(),
-            outline,
-        },
-    ))
-}
-
-pub fn parse_placement_keepout(input: &str) -> IResult<&str, PlacementKeepout> {
-    let (remaining, (owner, board_side, keepout_height, outline, _end)) = (
-        delimited(ws(tag(".PLACE_KEEPOUT ")), owner, tag("\n")),
-        terminated(is_not(" "), tag(" ")), // board_side
-        terminated(float, tag("\n")),      // keepout_height
-        many1(terminated(primitives::point, tag("\n"))), // outline
-        tag(".END_PLACE_KEEPOUT"),
-    )
-        .parse(input)?;
-
-    Ok((
-        remaining,
-        PlacementKeepout {
-            owner: owner.to_string(),
-            board_side: board_side.to_string(),
-            keepout_height,
-            outline,
-        },
-    ))
-}
-
 pub fn parse_placement_group_area(input: &str) -> IResult<&str, PlacementGroupArea> {
-    let (remaining, (owner, board_side, group_name, outline, _end)) = (
-        delimited(tag(".PLACE_REGION "), owner, tag("\n")),
-        terminated(is_not(" "), tag(" ")),   // board_side
-        terminated(is_not("\n"), tag("\n")), // group_name
-        many1(terminated(primitives::point, tag("\n"))), // outline
-        tag(".END_PLACE_REGION"),
+    let (remaining, (owner, board_side, group_name, outline)) = section!(
+        "PLACE_REGION",
+        (
+            terminated(owner, newline),
+            terminated(is_not(" "), tag(" ")), // board_side
+            terminated(is_not("\n"), newline), // group_name
+            many1(terminated(primitives::point, newline)), // outline
+        )
     )
-        .parse(input)?;
+    .parse(input)?;
 
     Ok((
         remaining,

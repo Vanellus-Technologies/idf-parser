@@ -45,6 +45,15 @@ macro_rules! ws_separated {
     };
 }
 
+/// A macro which takes  in a parser and a tuple of sub_parsers,
+/// repeatedly apply parser to the tuple of sub_parsers, and return a tuple of parsers
+#[macro_export]
+macro_rules! wrap {
+    ($parser_a:expr, ($($sub_parsers:expr),+)) => {
+        ($($parser_a($sub_parsers)),+)
+    };
+}
+
 /// Section parser
 ///
 /// Takes a section delimited by `.section` and `.end_section` and applies the given parser to the
@@ -159,5 +168,16 @@ mod tests {
                 angle: 45.0
             }
         );
+    }
+    #[test]
+    fn test_wrap() {
+        let input = "0 100.0 200.0 45.0";
+        let (remaining, (label, x, y, angle)) =
+            wrap!(ws, (u32, float, float, float)).parse(input).unwrap();
+        assert_eq!(remaining, "");
+        assert_eq!(label, 0);
+        assert_eq!(x, 100.0);
+        assert_eq!(y, 200.0);
+        assert_eq!(angle, 45.0);
     }
 }

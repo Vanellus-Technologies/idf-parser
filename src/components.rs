@@ -1,20 +1,38 @@
 use crate::primitives::{point, ws, Point};
+use crate::{section, ws_separated};
 use nom::bytes::complete::{is_not, tag};
-use nom::multi::{many0, many_m_n};
+use nom::multi::many0;
 use nom::number::complete::float;
-use nom::sequence::{delimited, preceded, terminated};
+use nom::sequence::delimited;
 use nom::IResult;
 use nom::Parser;
+use std::collections::HashMap;
 
-struct ComponentProperties {
-    capacitance: Option<f32>,                       // microfarads
-    resistance: Option<f32>,                        // ohms
-    tolerance: Option<f32>,                         // percent deviation
-    operating_power: Option<f32>,                   // milliwatts
-    maximum_power: Option<f32>,                     // milliwatts
-    thermal_conductivity: Option<f32>,              // watt / meter °C
-    junction_board_thermal_resistance: Option<f32>, // °C / watt
-    junction_case_thermal_resistance: Option<f32>,  // °C / watt
+/// Parses the properties of an electrical component from the input string.
+///
+/// Represents the properties of an electrical component.
+/// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=33
+///
+/// Properties of an electrical component:
+/// - capacitance: Capacitance in microfarads
+/// - resistance: Resistance in ohms
+/// - tolerance: Percent deviation
+/// - power_opr: Operating power rating in milliwatts
+/// - power_max: Maximum power rating in milliwatts
+/// - thermal_cond: Thermal conductivity in watts per meter °C
+/// - theta_jb: Junction to board thermal resistance in °C per watt
+/// - theta_jc: Junction to case thermal resistance in °C per watt
+/// - other: User-defined properties
+fn electrical_properties(input: &str) -> IResult<&str, HashMap<String, f32>> {
+    let (remaining, properties) = many0(electrical_property).parse(input)?;
+    Ok((remaining, properties.into_iter().collect()))
+}
+
+/// Parse a single property entry for an electrical component.
+fn electrical_property(input: &str) -> IResult<&str, (String, f32)> {
+    let (remaining, (_prop_tag, prop_name, value)) =
+        ws_separated!((tag("PROP"), is_not(" "), float)).parse(input)?;
+    Ok((remaining, (prop_name.to_string(), value)))
 }
 
 /// Represents an electrical component in the IDF format.
@@ -25,7 +43,7 @@ pub struct ElectricalComponent {
     units: String,
     height: f32,
     outline: Vec<Point>,
-    properties: ComponentProperties,
+    properties: HashMap<String, f32>,
 }
 
 /// Represents a mechanical component in the IDF format.
@@ -36,45 +54,6 @@ pub struct MechanicalComponent {
     units: String,
     height: f32,
     outline: Vec<Point>,
-}
-
-fn get_component<'a>(input: &'a str, prop: &'a str) -> IResult<&'a str, Option<f32>> {
-    let (remaining, capacitance) = many_m_n(
-        0,
-        1,
-        preceded(tag(format!("PROP {}", prop).as_str()), ws(float)),
-    )
-    .parse(input)?;
-    if capacitance.len() == 0 {
-        Ok((remaining, None))
-    } else {
-        Ok((remaining, Some(capacitance[0])))
-    }
-}
-
-/// Parses the properties of an electrical or mechanical component from the input string.
-fn properties(input: &str) -> IResult<&str, ComponentProperties> {
-    let (remaining, capacitance) = get_component(input, "CAPACITANCE")?;
-    let (remaining, resistance) = get_component(remaining, "RESISTANCE")?;
-    let (remaining, tolerance) = get_component(remaining, "TOLERANCE")?;
-    let (remaining, operating_power) = get_component(remaining, "POWER_OPR")?;
-    let (remaining, maximum_power) = get_component(remaining, "POWER_MAX")?;
-    let (remaining, thermal_conductivity) = get_component(remaining, "THERM_COND")?;
-    let (remaining, junction_board_thermal_resistance) = get_component(remaining, "THETA_JB")?;
-    let (remaining, junction_case_thermal_resistance) = get_component(remaining, "THETA_JC")?;
-
-    let component = ComponentProperties {
-        capacitance,
-        resistance,
-        tolerance,
-        operating_power,
-        maximum_power,
-        thermal_conductivity,
-        junction_board_thermal_resistance,
-        junction_case_thermal_resistance,
-    };
-
-    Ok((remaining, component))
 }
 
 /// Parses an electrical component from the input string.
@@ -94,15 +73,18 @@ fn properties(input: &str) -> IResult<&str, ComponentProperties> {
 /// assert_eq!(component.geometry_name, "cs13_a");
 /// ```
 pub fn electrical_component(input: &str) -> IResult<&str, ElectricalComponent> {
-    let (remaining, (geometry_name, part_number, units, height, outline, properties)) = (
-        delimited(ws(tag(".ELECTRICAL")), is_not(" "), tag(" ")), // geometry name
-        ws(is_not(" ")),                                          // part number
-        ws(is_not(" ")),                                          // units
-        ws(float),                                                // height
-        many0(ws(point)),                                         // outline
-        terminated(properties, tag(".END_ELECTRICAL")),           // outline
+    let (remaining, (geometry_name, part_number, units, height, outline, properties)) = section!(
+        "ELECTRICAL",
+        ws_separated!((
+            is_not(" "),           // geometry name
+            is_not(" "),           // part number
+            is_not(" "),           // units
+            float,                 // height
+            many0(ws(point)),      // outline
+            electrical_properties  // electrical component properties
+        ))
     )
-        .parse(input)?;
+    .parse(input)?;
 
     let electrical_component = ElectricalComponent {
         geometry_name: geometry_name.to_string(),
@@ -133,14 +115,17 @@ pub fn electrical_component(input: &str) -> IResult<&str, ElectricalComponent> {
 /// assert_eq!(component.geometry_name, "cs13_a");
 /// ```
 pub fn mechanical_component(input: &str) -> IResult<&str, MechanicalComponent> {
-    let (remaining, (geometry_name, part_number, units, height, outline)) = (
-        delimited(ws(tag(".MECHANICAL")), is_not(" "), tag(" ")), // geometry name
-        ws(is_not(" ")),                                          // part number
-        ws(is_not(" ")),                                          // units
-        ws(float),                                                // height
-        terminated(many0(ws(point)), tag(".END_MECHANICAL")),     // outline
+    let (remaining, (geometry_name, part_number, units, height, outline)) = section!(
+        "MECHANICAL",
+        ws_separated!((
+            is_not(" "),      // geometry name
+            is_not(" "),      // part number
+            is_not(" "),      // units
+            float,            // height
+            many0(ws(point))  // outline
+        ))
     )
-        .parse(input)?;
+    .parse(input)?;
 
     let mechanical_component = MechanicalComponent {
         geometry_name: geometry_name.to_string(),
@@ -175,6 +160,12 @@ cs13_a pn-cap THOU 150.0
 0 -55.0 55.0 0.0
 PROP CAPACITANCE 100.0
 PROP TOLERANCE 5.0
+PROP RESISTANCE 122.0
+PROP POWER_OPR 2.5
+PROP POWER_MAX 9.12
+PROP THERM_COND 0.0
+PROP THETA_JB 0.2
+PROP THETA_JC 5.1
 .END_ELECTRICAL";
         let (remaining, component) = electrical_component(input).unwrap();
         assert_eq!(remaining, "");
@@ -183,9 +174,14 @@ PROP TOLERANCE 5.0
         assert_eq!(component.units, "THOU");
         assert_eq!(component.height, 150.0);
         assert_eq!(component.outline.len(), 13);
-        assert_eq!(component.properties.capacitance, Some(100.0));
-        assert_eq!(component.properties.tolerance, Some(5.0));
-        assert_eq!(component.properties.resistance, None);
+        assert_eq!(component.properties["CAPACITANCE"], 100.0);
+        assert_eq!(component.properties["TOLERANCE"], 5.0);
+        assert_eq!(component.properties["RESISTANCE"], 122.0);
+        assert_eq!(component.properties["POWER_OPR"], 2.5);
+        assert_eq!(component.properties["POWER_MAX"], 9.12);
+        assert_eq!(component.properties["THERM_COND"], 0.0);
+        assert_eq!(component.properties["THETA_JB"], 0.2);
+        assert_eq!(component.properties["THETA_JC"], 5.1);
     }
     #[test]
     fn test_mechanical_component() {

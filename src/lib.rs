@@ -24,19 +24,20 @@ mod outlines;
 pub mod primitives;
 
 /// Take in the path a board or panel .emn file and return a Board struct.
-pub fn parse_board_file(file_path: &str) -> Result<board::Board, String> {
+pub fn parse_board_file(file_path: &str) -> Result<board::BoardPanel, String> {
     if !file_path.ends_with(".emn") {
         return Err("Board and panel files must end with .emn.".to_string());
     }
 
     let file = std::fs::read_to_string(file_path).map_err(|e| e.to_string())?;
-    let (remaining, board) = board::parse_board(&file).map_err(|e| e.to_string())?;
+    let (remaining, board) = board::parse_board_or_panel(&file).map_err(|e| e.to_string())?;
     if !remaining.is_empty() {
         return Err(format!("Unparsed data remaining: {}", remaining));
     }
     Ok(board)
 }
 
+/// Take in the path a library .emp file and return a Library struct.
 pub fn parse_library_file(file_path: &str) -> Result<library::Library, String> {
     if !file_path.ends_with(".emp") {
         return Err("Library files must end with .emp.".to_string());
