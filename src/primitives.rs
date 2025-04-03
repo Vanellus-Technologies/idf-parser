@@ -4,7 +4,7 @@ use nom::character::complete::u32;
 use nom::number::complete::float;
 use nom::sequence::preceded;
 use nom::{
-    IResult, Parser, character::complete::multispace0, error::ParseError, sequence::delimited,
+    character::complete::multispace0, error::ParseError, sequence::delimited, IResult, Parser,
 };
 
 /// Determine the owner of an element.
@@ -14,11 +14,66 @@ pub fn owner(input: &str) -> IResult<&str, &str> {
 
 /// A combinator that takes a parser `inner` and produces a parser that also consumes both leading and
 /// trailing whitespace, returning the output of `inner`.
-pub fn ws<'a, O, E: ParseError<&'a str>, F>(inner: F) -> impl Parser<&'a str, Output = O, Error = E>
+pub fn ws<'a, O, F>(
+    inner: F,
+) -> impl Parser<&'a str, Output = O, Error = nom::error::Error<&'a str>>
 where
-    F: Parser<&'a str, Output = O, Error = E>,
+    F: Parser<&'a str, Output = O, Error = nom::error::Error<&'a str>>,
 {
     delimited(multispace0, inner, multispace0)
+}
+
+/// Takes in a tuple of parsers with different return types
+/// and returns a tuple of parsers each wrapped with `ws`.
+///
+/// # Example
+/// ```
+/// use nom::character::complete::u32;
+/// use nom::number::complete::float;
+/// use nom::Parser;
+/// use idf_parser::ws_separated;
+/// use idf_parser::primitives::ws;
+///
+/// let input = "0 100.0 200.0 45.0";
+///
+/// let (remaining, (label, x, y, angle)) = ws_separated!((u32, float, float, float)).parse(input).unwrap();
+/// ```
+#[macro_export]
+macro_rules! ws_separated {
+    (($($parser:expr),+)) => {
+        ($(ws($parser)),+)
+    };
+}
+
+/// Section parser
+///
+/// Takes a section delimited by `.section` and `.end_section` and applies the given parser to the
+/// content of the section.
+///
+/// # Example
+///
+/// ```
+/// use idf_parser::primitives::{point, ws};
+/// use idf_parser::section;
+/// use nom::Parser;
+/// use nom::sequence::delimited;
+/// use nom::bytes::complete::tag;
+///
+/// let input = ".SECTION
+/// 0 100.0 200.0 45.0
+/// .END_SECTION";
+///
+/// let (remaining, point) = section!("SECTION", point).parse(input).unwrap();
+/// ```
+#[macro_export]
+macro_rules! section {
+    ($section:expr, $parser:expr) => {
+        delimited(
+            ws(tag(format!(".{}", $section).as_str())),
+            $parser,
+            ws(tag(format!(".END_{}", $section).as_str())),
+        )
+    };
 }
 
 /// Represents a point in a loop.
@@ -54,4 +109,55 @@ pub fn point(input: &str) -> IResult<&str, Point> {
         .parse(input)?;
     let point = Point { label, x, y, angle };
     Ok((remaining, point))
+}
+
+/// tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_point() {
+        let input = "0 100.0 200.0 45.0";
+        let (remaining, point) = point(input).unwrap();
+        assert_eq!(remaining, "");
+        assert_eq!(
+            point,
+            Point {
+                label: 0,
+                x: 100.0,
+                y: 200.0,
+                angle: 45.0
+            }
+        );
+    }
+
+    #[test]
+    fn test_ws_separated() {
+        let input = "0 100.0 200.0 45.0";
+        let (remaining, (label, x, y, angle)) = ws_separated!((u32, float, float, float))
+            .parse(input)
+            .unwrap();
+        assert_eq!(remaining, "");
+        assert_eq!(label, 0);
+        assert_eq!(x, 100.0);
+        assert_eq!(y, 200.0);
+        assert_eq!(angle, 45.0);
+    }
+
+    #[test]
+    fn test_section() {
+        let input = ".SECTION\n0 100.0 200.0 45.0\n.END_SECTION";
+        let (remaining, point) = section!("SECTION", point).parse(input).unwrap();
+        assert_eq!(remaining, "");
+        assert_eq!(
+            point,
+            Point {
+                label: 0,
+                x: 100.0,
+                y: 200.0,
+                angle: 45.0
+            }
+        );
+    }
 }

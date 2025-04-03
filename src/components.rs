@@ -1,10 +1,10 @@
-use crate::primitives::{Point, point, ws};
-use nom::IResult;
-use nom::Parser;
+use crate::primitives::{point, ws, Point};
 use nom::bytes::complete::{is_not, tag};
-use nom::multi::{many_m_n, many0};
+use nom::multi::{many0, many_m_n};
 use nom::number::complete::float;
 use nom::sequence::{delimited, preceded, terminated};
+use nom::IResult;
+use nom::Parser;
 
 struct ComponentProperties {
     capacitance: Option<f32>,                       // microfarads
@@ -38,7 +38,7 @@ pub struct MechanicalComponent {
     outline: Vec<Point>,
 }
 
-fn get_component<'a>(input: &'a str, prop: &str) -> IResult<&'a str, Option<f32>> {
+fn get_component<'a>(input: &'a str, prop: &'a str) -> IResult<&'a str, Option<f32>> {
     let (remaining, capacitance) = many_m_n(
         0,
         1,
