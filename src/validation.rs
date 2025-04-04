@@ -7,6 +7,24 @@ use std::collections::HashSet;
 /// A board file can reference a number of components which have properties and outlines defined in
 /// the library file. To confirm that the board file is valid, we need to check that every
 /// referenced component is defined in the library file.
+///
+/// For example this placement section of a board file references component "cs13_a".
+/// ```text
+/// .PLACEMENT
+/// cs13_a pn-cap C1
+/// 4000.0 1000.0 100.0 0.0 TOP PLACED
+/// .END_PLACEMENT
+/// ```
+///
+/// We thus expect there to be a corresponding ".ELECTRICAL"
+/// or ".MECHANICAL" section in the library file which defines the component, for example:
+/// ```text
+/// .ELECTRICAL
+/// cs13_a pn-cc1210 THOU 67.0
+/// 0 -40.0 56.0 0.0
+/// PROP CAPACITANCE 0.1
+/// .END_ELECTRICAL
+/// ```
 pub(crate) fn library_references_valid(
     library: &Library,
     board: &BoardPanel,
@@ -43,7 +61,28 @@ pub(crate) fn library_references_valid(
     Ok(())
 }
 
-/// Validate that all the boards referenced in a panel are present.
+/// Validate that all the boards referenced in a panel file are present.
+///
+/// Any entry in .PLACEMENT section of the panel file with a reference designator of "BOARD" is
+/// considered a reference to another board. The package name of that entry is the name of the
+/// board being referenced.
+///
+/// For example this placement section of a panel file references board "board1".
+/// ```text
+/// .PLACEMENT
+/// board1 pn-board BOARD
+/// 1700.0 3300.0 0.0 0.0 TOP MCAD
+/// .END_PLACEMENT
+/// ```
+///
+/// We thus expect there to be a corresponding ".HEADER" section in on of the board files which
+/// defines the board, for example:
+/// ```text
+/// .HEADER
+/// BOARD_FILE 3.0 "Sample File Generator" 10/22/96.16:02:44 1
+/// board1 THOU
+/// .END_HEADER
+/// ```
 pub(crate) fn panel_references_valid(
     panel: &BoardPanel,
     boards: &[BoardPanel],
