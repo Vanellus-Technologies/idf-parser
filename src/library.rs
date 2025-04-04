@@ -13,21 +13,6 @@ pub struct Library {
     pub mechanical_components: Vec<MechanicalComponent>,
 }
 
-impl Default for Library {
-    fn default() -> Self {
-        Library {
-            header: LibraryHeader {
-                version: 3,
-                system_id: "".to_string(),
-                date: "".to_string(),
-                file_version: 1,
-            },
-            electrical_components: Vec::new(),
-            mechanical_components: Vec::new(),
-        }
-    }
-}
-
 /// Parses a library emp file which contains detail on electrical and mechanical components.
 /// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=29
 pub(crate) fn parse_library(input: &str) -> Result<Library, nom::Err<nom::error::Error<&str>>> {
