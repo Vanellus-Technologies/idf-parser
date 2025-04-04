@@ -9,9 +9,10 @@ use crate::outlines::{
     RoutingKeepout, RoutingOutline, ViaKeepout,
 };
 use nom::multi::{many0, many_m_n};
-use nom::{IResult, Parser};
+use nom::Parser;
 
 /// Represents a board or panel file in the IDF format.
+#[derive(Clone, Debug, PartialEq)]
 pub struct BoardPanel {
     header: BoardPanelHeader,
     outline: BoardPanelOutline,
@@ -29,7 +30,7 @@ pub struct BoardPanel {
 
 /// Parse the content of a board or panel .emn file into a Board struct.
 /// File specification: http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=8
-pub fn parse_board_or_panel(input: &str) -> IResult<&str, BoardPanel> {
+pub fn parse_board_or_panel(input: &str) -> Result<BoardPanel, nom::Err<nom::error::Error<&str>>> {
     let (
         remaining,
         (
@@ -64,16 +65,22 @@ pub fn parse_board_or_panel(input: &str) -> IResult<&str, BoardPanel> {
         // expect one section
         parse_component_placement_section,
     )
-        .parse(input)?;
+        .parse(input)
+        .unwrap();
 
     // Unwrap the notes section, if it exists. We expect there to be either 0 or 1 sections.
-    let notes: Vec<Note> = if wrapped_notes.len() > 1 {
+    let notes: Vec<Note> = if wrapped_notes.len() == 1 {
         wrapped_notes[0].clone()
-    } else {
+    } else if wrapped_notes.is_empty() {
         Vec::new()
+    } else {
+        panic!(
+            "Unexpected number of notes sections: {}",
+            wrapped_notes.len()
+        );
     };
 
-    let board = BoardPanel {
+    let board_panel = BoardPanel {
         header,
         outline,
         other_outlines,
@@ -88,12 +95,21 @@ pub fn parse_board_or_panel(input: &str) -> IResult<&str, BoardPanel> {
         component_placements,
     };
 
-    Ok((remaining, board))
+    // Check if there are any unparsed data remaining
+    if !remaining.is_empty() {
+        return Err(nom::Err::Error(nom::error::Error::new(
+            remaining,
+            nom::error::ErrorKind::Eof,
+        )));
+    } else {
+        Ok(board_panel)
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::primitives::Point;
     #[test]
     fn test_parse_board() {
         let input = ".HEADER
@@ -153,10 +169,256 @@ cc1210 pn-cc1210 C3
 3200.0 1800.0 0.0 0.0 BOTTOM PLACED
 .END_PLACEMENT";
 
-        let (remaining, board) = parse_board_or_panel(input).unwrap();
-        assert_eq!(remaining, "");
-        assert_eq!(board.component_placements.len(), 3);
-        assert_eq!(board.component_placements[0].package_name, "cs13_a");
+        // Construct expected board
+        let header = BoardPanelHeader {
+            file_type: "BOARD_FILE".to_string(),
+            version: 3,
+            system_id: "Sample File Generator".to_string(),
+            date: "10/22/96.16:02:44".to_string(),
+            file_version: 1,
+            board_name: "sample_board".to_string(),
+            units: "THOU".to_string(),
+        };
+
+        let outline = BoardPanelOutline {
+            owner: "MCAD".to_string(),
+            thickness: 62.0,
+            outline: vec![
+                Point {
+                    loop_label: 0,
+                    x: 5030.5,
+                    y: -120.0,
+                    angle: 0.0,
+                },
+                Point {
+                    loop_label: 1,
+                    x: 3000.0,
+                    y: 2350.0,
+                    angle: 360.0,
+                },
+            ],
+        };
+
+        let routing_outlines = vec![RoutingOutline {
+            owner: "ECAD".to_string(),
+            routing_layers: "ALL".to_string(),
+            outline: vec![
+                Point {
+                    loop_label: 0,
+                    x: 5112.5,
+                    y: 150.0,
+                    angle: 0.0,
+                },
+                Point {
+                    loop_label: 0,
+                    x: 5112.5,
+                    y: 150.0,
+                    angle: 0.0,
+                },
+            ],
+        }];
+
+        let placement_outlines = vec![
+            PlacementOutline {
+                owner: "MCAD".to_string(),
+                board_side: "TOP".to_string(),
+                outline_height: 1000.0,
+                outline: vec![
+                    Point {
+                        loop_label: 0,
+                        x: 5080.0,
+                        y: 2034.9,
+                        angle: 0.0,
+                    },
+                    Point {
+                        loop_label: 0,
+                        x: 5080.0,
+                        y: 2034.9,
+                        angle: 0.0,
+                    },
+                ],
+            },
+            PlacementOutline {
+                owner: "UNOWNED".to_string(),
+                board_side: "BOTTOM".to_string(),
+                outline_height: 200.0,
+                outline: vec![
+                    Point {
+                        loop_label: 0,
+                        x: 300.0,
+                        y: 200.0,
+                        angle: 0.0,
+                    },
+                    Point {
+                        loop_label: 0,
+                        x: 4800.0,
+                        y: 200.0,
+                        angle: 0.0,
+                    },
+                ],
+            },
+        ];
+
+        let routing_keepouts = vec![RoutingKeepout {
+            owner: "ECAD".to_string(),
+            routing_layers: "ALL".to_string(),
+            outline: vec![
+                Point {
+                    loop_label: 0,
+                    x: 2650.0,
+                    y: 2350.0,
+                    angle: 0.0,
+                },
+                Point {
+                    loop_label: 0,
+                    x: 3100.0,
+                    y: 2350.0,
+                    angle: 360.0,
+                },
+            ],
+        }];
+
+        let placement_keepouts = vec![
+            PlacementKeepout {
+                owner: "MCAD".to_string(),
+                board_side: "BOTH".to_string(),
+                keepout_height: 0.0,
+                outline: vec![
+                    Point {
+                        loop_label: 0,
+                        x: 2650.0,
+                        y: 2350.0,
+                        angle: 0.0,
+                    },
+                    Point {
+                        loop_label: 0,
+                        x: 3100.0,
+                        y: 2350.0,
+                        angle: 360.0,
+                    },
+                ],
+            },
+            PlacementKeepout {
+                owner: "MCAD".to_string(),
+                board_side: "TOP".to_string(),
+                keepout_height: 300.0,
+                outline: vec![
+                    Point {
+                        loop_label: 0,
+                        x: 3700.0,
+                        y: 5000.0,
+                        angle: 0.0,
+                    },
+                    Point {
+                        loop_label: 0,
+                        x: 3700.0,
+                        y: 5000.0,
+                        angle: 0.0,
+                    },
+                ],
+            },
+        ];
+
+        let drilled_holes = vec![
+            Hole {
+                diameter: 30.0,
+                x: 1800.0,
+                y: 100.0,
+                plating_style: "PTH".to_string(),
+                associated_part: "J1".to_string(),
+                hole_type: "PIN".to_string(),
+                owner: "ECAD".to_string(),
+            },
+            Hole {
+                diameter: 20.0,
+                x: 2000.0,
+                y: 1600.0,
+                plating_style: "PTH".to_string(),
+                associated_part: "BOARD".to_string(),
+                hole_type: "VIA".to_string(),
+                owner: "ECAD".to_string(),
+            },
+            Hole {
+                diameter: 93.0,
+                x: 5075.0,
+                y: 0.0,
+                plating_style: "PTH".to_string(),
+                associated_part: "BOARD".to_string(),
+                hole_type: "MTG".to_string(),
+                owner: "UNOWNED".to_string(),
+            },
+            Hole {
+                diameter: 93.0,
+                x: 0.0,
+                y: 4800.0,
+                plating_style: "NPTH".to_string(),
+                associated_part: "BOARD".to_string(),
+                hole_type: "TOOL".to_string(),
+                owner: "MCAD".to_string(),
+            },
+        ];
+
+        let notes = vec![Note {
+            x: 1800.0,
+            y: 300.0,
+            text_height: 75.0,
+            test_string_physical_length: 1700.0,
+            text: "Do not move connectors!".to_string(),
+        }];
+
+        let component_placements = vec![
+            ComponentPlacement {
+                package_name: "cs13_a".to_string(),
+                part_number: "pn-cap".to_string(),
+                reference_designator: "C1".to_string(),
+                x: 4000.0,
+                y: 1000.0,
+                mounting_offset: 100.0,
+                rotation_angle: 0.0,
+                board_side: "TOP".to_string(),
+                placement_status: "PLACED".to_string(),
+            },
+            ComponentPlacement {
+                package_name: "cc1210".to_string(),
+                part_number: "pn-cc1210".to_string(),
+                reference_designator: "C2".to_string(),
+                x: 3000.0,
+                y: 3500.0,
+                mounting_offset: 0.0,
+                rotation_angle: 0.0,
+                board_side: "TOP".to_string(),
+                placement_status: "PLACED".to_string(),
+            },
+            ComponentPlacement {
+                package_name: "cc1210".to_string(),
+                part_number: "pn-cc1210".to_string(),
+                reference_designator: "C3".to_string(),
+                x: 3200.0,
+                y: 1800.0,
+                mounting_offset: 0.0,
+                rotation_angle: 0.0,
+                board_side: "BOTTOM".to_string(),
+                placement_status: "PLACED".to_string(),
+            },
+        ];
+
+        let expected_board = BoardPanel {
+            header,
+            outline,
+            other_outlines: vec![],
+            routing_outlines,
+            placement_outlines,
+            routing_keepouts,
+            via_keepouts: vec![],
+            placement_keepouts,
+            placement_group_areas: vec![],
+            drilled_holes,
+            notes,
+            component_placements,
+        };
+
+        let board = parse_board_or_panel(input).unwrap();
+        assert_eq!(board, expected_board);
     }
     #[test]
     fn test_parse_panel() {
@@ -192,9 +454,149 @@ sample_board pn-board BOARD
 1700.0 3300.0 0.0 0.0 TOP MCAD
 .END_PLACEMENT";
 
-        let (remaining, board) = parse_board_or_panel(input).unwrap();
-        assert_eq!(remaining, "");
-        assert_eq!(board.component_placements.len(), 1);
-        assert_eq!(board.component_placements[0].package_name, "sample_board");
+        let header = BoardPanelHeader {
+            file_type: "PANEL_FILE".to_string(),
+            version: 3,
+            system_id: "Sample File Generator".to_string(),
+            date: "10/22/96.16:20:19".to_string(),
+            file_version: 1,
+            board_name: "sample_panel".to_string(),
+            units: "THOU".to_string(),
+        };
+
+        let outline = BoardPanelOutline {
+            owner: "MCAD".to_string(),
+            thickness: 62.0,
+            outline: vec![
+                Point {
+                    loop_label: 0,
+                    x: 0.0,
+                    y: 0.0,
+                    angle: 0.0,
+                },
+                Point {
+                    loop_label: 0,
+                    x: 16000.0,
+                    y: 0.0,
+                    angle: 0.0,
+                },
+            ],
+        };
+
+        let placement_keepouts = vec![
+            PlacementKeepout {
+                owner: "MCAD".to_string(),
+                board_side: "BOTTOM".to_string(),
+                keepout_height: 0.0,
+                outline: vec![
+                    Point {
+                        loop_label: 0,
+                        x: 13500.0,
+                        y: 0.0,
+                        angle: 0.0,
+                    },
+                    Point {
+                        loop_label: 0,
+                        x: 13500.0,
+                        y: 12000.0,
+                        angle: 0.0,
+                    },
+                    Point {
+                        loop_label: 0,
+                        x: 13500.0,
+                        y: 0.0,
+                        angle: 0.0,
+                    },
+                ],
+            },
+            PlacementKeepout {
+                owner: "MCAD".to_string(),
+                board_side: "BOTTOM".to_string(),
+                keepout_height: 0.0,
+                outline: vec![
+                    Point {
+                        loop_label: 0,
+                        x: 0.0,
+                        y: 0.0,
+                        angle: 0.0,
+                    },
+                    Point {
+                        loop_label: 0,
+                        x: 2200.0,
+                        y: 0.0,
+                        angle: 0.0,
+                    },
+                    Point {
+                        loop_label: 0,
+                        x: 2200.0,
+                        y: 12000.0,
+                        angle: 0.0,
+                    },
+                    Point {
+                        loop_label: 0,
+                        x: 0.0,
+                        y: 12000.0,
+                        angle: 0.0,
+                    },
+                    Point {
+                        loop_label: 0,
+                        x: 0.0,
+                        y: 0.0,
+                        angle: 0.0,
+                    },
+                ],
+            },
+        ];
+
+        let drilled_holes = vec![
+            Hole {
+                diameter: 250.0,
+                x: 15500.0,
+                y: 11500.0,
+                plating_style: "NPTH".to_string(),
+                associated_part: "PANEL".to_string(),
+                hole_type: "TOOL".to_string(),
+                owner: "MCAD".to_string(),
+            },
+            Hole {
+                diameter: 250.0,
+                x: 500.0,
+                y: 500.0,
+                plating_style: "NPTH".to_string(),
+                associated_part: "PANEL".to_string(),
+                hole_type: "TOOL".to_string(),
+                owner: "MCAD".to_string(),
+            },
+        ];
+
+        let component_placements = vec![ComponentPlacement {
+            package_name: "sample_board".to_string(),
+            part_number: "pn-board".to_string(),
+            reference_designator: "BOARD".to_string(),
+            x: 1700.0,
+            y: 3300.0,
+            mounting_offset: 0.0,
+            rotation_angle: 0.0,
+            board_side: "TOP".to_string(),
+            placement_status: "MCAD".to_string(),
+        }];
+
+        let expected_board = BoardPanel {
+            header,
+            outline,
+            other_outlines: vec![],
+            routing_outlines: vec![],
+            placement_outlines: vec![],
+            routing_keepouts: vec![],
+            via_keepouts: vec![],
+            placement_keepouts,
+            placement_group_areas: vec![],
+            drilled_holes,
+            notes: vec![],
+            component_placements,
+        };
+
+        let board = parse_board_or_panel(input).unwrap();
+        assert_eq!(board, expected_board);
     }
 }

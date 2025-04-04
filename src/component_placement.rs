@@ -10,7 +10,7 @@ use nom::IResult;
 use nom::Parser;
 
 /// Represents a component placement in the IDF format.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct ComponentPlacement {
     pub package_name: String,
     pub part_number: String,

@@ -4,10 +4,10 @@ use nom::character::complete::u32;
 use nom::number::complete::float;
 use nom::sequence::preceded;
 use nom::{
-    character::complete::multispace0, error::ParseError, sequence::delimited, IResult, Parser,
+    IResult, Parser, character::complete::multispace0, error::ParseError, sequence::delimited,
 };
 
-/// Determine the owner of an element.
+/// Determine the owner of an outline or set of holes.
 pub fn owner(input: &str) -> IResult<&str, &str> {
     alt((tag("ECAD"), tag("MCAD"), tag("UNOWNED"))).parse(input)
 }
@@ -82,7 +82,7 @@ macro_rules! section {
 /// Used repeatedly in the IDF format to represent points in a loop.
 /// First mention here:
 /// http://www.simplifiedsolutionsinc.com/images/idf_v30_spec.pdf#page=10 in Record 3
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Point {
     /// The label of the loop the point exist in, 0 for counter-clockwise, 1 for clockwise.
     pub loop_label: u32,

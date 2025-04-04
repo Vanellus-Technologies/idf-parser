@@ -7,12 +7,15 @@ use nom::bytes::complete::{is_not, tag};
 use nom::IResult;
 use nom::Parser;
 
+#[derive(PartialEq, Debug, Clone)]
 pub struct LibraryHeader {
     pub version: u32, // which IDF version, should be 3.0
     pub system_id: String,
     pub date: String, // We don't decompose this for now
     pub file_version: u32,
 }
+
+#[derive(PartialEq, Debug, Clone)]
 pub struct BoardPanelHeader {
     pub file_type: String, // BOARD_FILE or PANEL_FILE
     pub version: u32,      // which IDF version, should be 3.0

@@ -17,11 +17,11 @@ use nom::Parser;
 /// note to its subject is inferred by its location.
 #[derive(PartialEq, Debug, Clone)]
 pub struct Note {
-    x: f32,
-    y: f32,
-    text_height: f32,
-    test_string_physical_length: f32,
-    text: String,
+    pub x: f32,
+    pub y: f32,
+    pub text_height: f32,
+    pub test_string_physical_length: f32,
+    pub text: String,
 }
 
 fn note(input: &str) -> IResult<&str, Note> {
@@ -108,6 +108,23 @@ mod tests {
                 text: "Do not move connectors!".to_string(),
             },
         ];
+        let (remaining, notes) = parse_notes_section(input).unwrap();
+        assert_eq!(notes, expected);
+    }
+
+    #[test]
+    fn test_notes_more() {
+        let input = ".NOTES
+1800.0 300.0 75.0 1700.0 \"Do not move connectors!\"
+.END_NOTES";
+
+        let expected = vec![Note {
+            x: 1800.0,
+            y: 300.0,
+            text_height: 75.0,
+            test_string_physical_length: 1700.0,
+            text: "Do not move connectors!".to_string(),
+        }];
         let (remaining, notes) = parse_notes_section(input).unwrap();
         assert_eq!(notes, expected);
     }

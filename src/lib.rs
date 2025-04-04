@@ -28,13 +28,13 @@ pub fn parse_board_file(file_path: &str) -> Result<board::BoardPanel, String> {
     if !file_path.ends_with(".emn") {
         return Err("Board and panel files must end with .emn.".to_string());
     }
-
     let file = std::fs::read_to_string(file_path).map_err(|e| e.to_string())?;
-    let (remaining, board) = board::parse_board_or_panel(&file).map_err(|e| e.to_string())?;
-    if !remaining.is_empty() {
-        return Err(format!("Unparsed data remaining: {}", remaining));
+    let result = board::parse_board_or_panel(&file);
+
+    match result {
+        Ok(board) => Ok(board),
+        Err(e) => Err(format!("Failed to parse board file: {}", e)),
     }
-    Ok(board)
 }
 
 /// Take in the path a library .emp file and return a Library struct.
@@ -44,11 +44,12 @@ pub fn parse_library_file(file_path: &str) -> Result<library::Library, String> {
     }
 
     let file = std::fs::read_to_string(file_path).map_err(|e| e.to_string())?;
-    let (remaining, library) = library::parse_library(&file).map_err(|e| e.to_string())?;
-    if !remaining.is_empty() {
-        return Err(format!("Unparsed data remaining: {}", remaining));
+    let result = library::parse_library(&file);
+
+    match result {
+        Ok(library) => Ok(library),
+        Err(e) => Err(format!("Failed to parse library file: {}", e)),
     }
-    Ok(library)
 }
 
 #[cfg(test)]
@@ -57,12 +58,10 @@ mod tests {
 
     #[test]
     fn test_parse_board_file() {
-        let file_path = "src/board.emn";
-        let board = parse_board_file(file_path).unwrap();
+        parse_board_file("src/board.emn").unwrap();
     }
     #[test]
     fn test_parse_library_file() {
-        let file_path = "src/library.emp";
-        let library = parse_library_file(file_path).unwrap();
+        parse_library_file("src/library.emp").unwrap();
     }
 }

@@ -37,23 +37,25 @@ fn electrical_property(input: &str) -> IResult<&str, (String, f32)> {
 
 /// Represents an electrical component in the IDF format.
 /// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=31
+#[derive(Debug, PartialEq, Clone)]
 pub struct ElectricalComponent {
     pub geometry_name: String,
-    part_number: String,
-    units: String,
-    height: f32,
-    outline: Vec<Point>,
-    properties: HashMap<String, f32>,
+    pub part_number: String,
+    pub units: String,
+    pub height: f32,
+    pub outline: Vec<Point>,
+    pub properties: HashMap<String, f32>,
 }
 
 /// Represents a mechanical component in the IDF format.
 /// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=34
+#[derive(Debug, PartialEq, Clone)]
 pub struct MechanicalComponent {
     pub geometry_name: String,
-    part_number: String,
-    units: String,
-    height: f32,
-    outline: Vec<Point>,
+    pub part_number: String,
+    pub units: String,
+    pub height: f32,
+    pub outline: Vec<Point>,
 }
 
 /// Parses an electrical component from the input string.
