@@ -14,18 +14,18 @@ use nom::multi::{many_m_n, many0};
 /// Represents a board or panel file in the IDF format.
 #[derive(Clone, Debug, PartialEq)]
 pub struct BoardPanel {
-    header: BoardPanelHeader,
-    outline: BoardPanelOutline,
-    other_outlines: Vec<OtherOutline>,
-    routing_outlines: Vec<RoutingOutline>,
-    placement_outlines: Vec<PlacementOutline>,
-    routing_keepouts: Vec<RoutingKeepout>,
-    via_keepouts: Vec<ViaKeepout>,
-    placement_keepouts: Vec<PlacementKeepout>,
-    placement_group_areas: Vec<PlacementGroupArea>,
-    drilled_holes: Vec<Hole>,
-    notes: Vec<Note>,
-    component_placements: Vec<ComponentPlacement>,
+    pub header: BoardPanelHeader,
+    pub outline: BoardPanelOutline,
+    pub other_outlines: Vec<OtherOutline>,
+    pub routing_outlines: Vec<RoutingOutline>,
+    pub placement_outlines: Vec<PlacementOutline>,
+    pub routing_keepouts: Vec<RoutingKeepout>,
+    pub via_keepouts: Vec<ViaKeepout>,
+    pub placement_keepouts: Vec<PlacementKeepout>,
+    pub placement_group_areas: Vec<PlacementGroupArea>,
+    pub drilled_holes: Vec<Hole>,
+    pub notes: Vec<Note>,
+    pub component_placements: Vec<ComponentPlacement>,
 }
 
 /// Parse the content of a board or panel .emn file into a Board struct.

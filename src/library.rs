@@ -8,9 +8,24 @@ use std::collections::HashMap;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Library {
-    header: LibraryHeader,
-    electrical_components: Vec<ElectricalComponent>,
-    mechanical_components: Vec<MechanicalComponent>,
+    pub header: LibraryHeader,
+    pub electrical_components: Vec<ElectricalComponent>,
+    pub mechanical_components: Vec<MechanicalComponent>,
+}
+
+impl Default for Library {
+    fn default() -> Self {
+        Library {
+            header: LibraryHeader {
+                version: 3,
+                system_id: "".to_string(),
+                date: "".to_string(),
+                file_version: 1,
+            },
+            electrical_components: Vec::new(),
+            mechanical_components: Vec::new(),
+        }
+    }
 }
 
 /// Parses a library emp file which contains detail on electrical and mechanical components.

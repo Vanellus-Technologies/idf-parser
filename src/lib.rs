@@ -13,6 +13,9 @@
 //! let library = parse_library_file("src/library.emp").unwrap();
 //! ```
 
+use crate::board::BoardPanel;
+use crate::library::Library;
+
 pub mod board;
 pub mod component_placement;
 pub mod components;
@@ -23,6 +26,7 @@ pub mod notes;
 mod outlines;
 pub mod point;
 pub mod primitives;
+mod validation;
 
 /// Take in the path a board or panel .emn file and return a Board struct.
 pub fn parse_board_file(file_path: &str) -> Result<board::BoardPanel, String> {
@@ -53,6 +57,36 @@ pub fn parse_library_file(file_path: &str) -> Result<library::Library, String> {
     }
 }
 
+/// Parse an optional panel file, library file and 1 or more board files and validate them.
+fn parse_assembly(
+    panel_file: Option<&str>,
+    library_file: &str,
+    board_files: Vec<&str>,
+) -> Result<(Option<BoardPanel>, Library, Vec<BoardPanel>), String> {
+    let mut boards = Vec::new();
+
+    let panel = match panel_file {
+        Some(file) => Some(parse_board_file(file)?),
+        None => None,
+    };
+
+    let library = parse_library_file(library_file)?;
+
+    for board_file in board_files {
+        boards.push(parse_board_file(board_file)?);
+    }
+
+    for board in &boards {
+        validation::library_references_valid(&library, board)?;
+    }
+
+    if let Some(panel) = &panel {
+        validation::panel_references_valid(panel, &boards)?;
+    }
+
+    Ok((panel, library, boards))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -64,5 +98,15 @@ mod tests {
     #[test]
     fn test_parse_library_file() {
         parse_library_file("src/library.emp").unwrap();
+    }
+
+    #[test]
+    fn test_parse_assembly() {
+        let panel = Some("src/panel.emn");
+        let library = "src/library.emp";
+        let boards = vec!["src/board.emn"];
+
+        let result = parse_assembly(panel, library, boards);
+        assert!(result.is_ok());
     }
 }
