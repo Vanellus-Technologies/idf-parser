@@ -1,11 +1,11 @@
 use crate::primitives::ws;
 use crate::{parse_section, ws_separated};
+use nom::IResult;
+use nom::Parser;
 use nom::bytes::complete::{is_not, tag};
 use nom::multi::many1;
 use nom::number::complete::float;
 use nom::sequence::delimited;
-use nom::IResult;
-use nom::Parser;
 
 /// A board or panel file note.
 /// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=26

@@ -2,12 +2,12 @@ use nom::branch::alt;
 
 use crate::primitives::ws;
 use crate::{parse_section, ws_separated};
+use nom::IResult;
+use nom::Parser;
 use nom::bytes::complete::{is_not, tag};
 use nom::multi::many0;
 use nom::number::complete::float;
 use nom::sequence::delimited;
-use nom::IResult;
-use nom::Parser;
 
 /// Represents a component placement in the IDF format.
 #[derive(Debug, PartialEq, Clone)]

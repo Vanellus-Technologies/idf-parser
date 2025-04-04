@@ -3,11 +3,11 @@ use nom::sequence::{delimited, terminated};
 
 use crate::primitives::ws;
 use crate::{parse_section, ws_separated};
-use nom::bytes::complete::{is_not, tag};
-use nom::error::ErrorKind;
 use nom::Err::Error;
 use nom::Parser;
-use nom::{error, IResult};
+use nom::bytes::complete::{is_not, tag};
+use nom::error::ErrorKind;
+use nom::{IResult, error};
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct LibraryHeader {

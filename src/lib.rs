@@ -21,8 +21,8 @@ pub mod headers;
 mod library;
 pub mod notes;
 mod outlines;
-pub mod primitives;
 pub mod point;
+pub mod primitives;
 
 /// Take in the path a board or panel .emn file and return a Board struct.
 pub fn parse_board_file(file_path: &str) -> Result<board::BoardPanel, String> {

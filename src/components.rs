@@ -1,13 +1,13 @@
+use crate::point::{Point, point};
+use crate::primitives::ws;
 use crate::{parse_section, ws_separated};
+use nom::IResult;
+use nom::Parser;
 use nom::bytes::complete::{is_not, tag};
 use nom::multi::many0;
 use nom::number::complete::float;
 use nom::sequence::delimited;
-use nom::IResult;
-use nom::Parser;
 use std::collections::HashMap;
-use crate::point::{point, Point};
-use crate::primitives::ws;
 
 /// Parses the properties of an electrical component from the input string.
 ///
@@ -76,18 +76,19 @@ pub struct MechanicalComponent {
 /// assert_eq!(component.geometry_name, "cs13_a");
 /// ```
 pub fn electrical_component(input: &str) -> IResult<&str, ElectricalComponent> {
-    let (remaining, (geometry_name, part_number, units, height, outline, properties)) = parse_section!(
-        "ELECTRICAL",
-        ws_separated!((
-            is_not(" "),           // geometry name
-            is_not(" "),           // part number
-            is_not(" "),           // units
-            float,                 // height
-            many0(ws(point)),      // outline
-            electrical_properties  // electrical component properties
-        ))
-    )
-    .parse(input)?;
+    let (remaining, (geometry_name, part_number, units, height, outline, properties)) =
+        parse_section!(
+            "ELECTRICAL",
+            ws_separated!((
+                is_not(" "),           // geometry name
+                is_not(" "),           // part number
+                is_not(" "),           // units
+                float,                 // height
+                many0(ws(point)),      // outline
+                electrical_properties  // electrical component properties
+            ))
+        )
+        .parse(input)?;
 
     let electrical_component = ElectricalComponent {
         geometry_name: geometry_name.to_string(),
