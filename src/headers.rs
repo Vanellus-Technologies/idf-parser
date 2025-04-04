@@ -2,10 +2,12 @@ use nom::branch::alt;
 use nom::sequence::{delimited, terminated};
 
 use crate::primitives::ws;
-use crate::{section, ws_separated};
+use crate::{parse_section, ws_separated};
 use nom::bytes::complete::{is_not, tag};
-use nom::IResult;
+use nom::error::ErrorKind;
+use nom::Err::Error;
 use nom::Parser;
+use nom::{error, IResult};
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct LibraryHeader {
@@ -69,7 +71,7 @@ fn header_metadata(input: &str) -> IResult<&str, (String, u32, String, String, u
 /// assert_eq!(header.units, "THOU");
 /// ```
 pub fn parse_board_or_panel_header(input: &str) -> IResult<&str, BoardPanelHeader> {
-    let (remaining, (metadata, (board_name, units))) = section!(
+    let (remaining, (metadata, (board_name, units))) = parse_section!(
         "HEADER",
         (
             header_metadata,
@@ -109,13 +111,10 @@ pub fn parse_board_or_panel_header(input: &str) -> IResult<&str, BoardPanelHeade
 /// ```
 pub fn parse_library_header(input: &str) -> IResult<&str, LibraryHeader> {
     let (remaining, (file_type, version, system_id, date, file_version)) =
-        section!("HEADER", header_metadata).parse(input)?;
+        parse_section!("HEADER", header_metadata).parse(input)?;
 
     if file_type != "LIBRARY_FILE" {
-        return Err(nom::Err::Error(nom::error::Error::new(
-            input,
-            nom::error::ErrorKind::Tag,
-        )));
+        return Err(Error(error::Error::new(input, ErrorKind::Tag)));
     }
 
     let header = LibraryHeader {

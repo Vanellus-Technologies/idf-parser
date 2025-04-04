@@ -3,7 +3,7 @@ use crate::drilled_holes::{parse_drilled_holes_section, Hole};
 use crate::headers::{parse_board_or_panel_header, BoardPanelHeader};
 use crate::notes::{parse_notes_section, Note};
 use crate::outlines::{
-    parse_board_outline, parse_other_outline, parse_placement_group_area, parse_placement_keepout, parse_placement_outline,
+    parse_board_panel_outline, parse_other_outline, parse_placement_group_area, parse_placement_keepout, parse_placement_outline,
     parse_routing_keepout, parse_routing_outline, parse_via_keepout, BoardPanelOutline, OtherOutline,
     PlacementGroupArea, PlacementKeepout, PlacementOutline,
     RoutingKeepout, RoutingOutline, ViaKeepout,
@@ -49,7 +49,7 @@ pub fn parse_board_or_panel(input: &str) -> Result<BoardPanel, nom::Err<nom::err
         ),
     ) = (
         parse_board_or_panel_header,
-        parse_board_outline,
+        parse_board_panel_outline,
         // expect there to be between 0 and n sections
         many0(parse_other_outline),
         many0(parse_routing_outline),
@@ -75,7 +75,7 @@ pub fn parse_board_or_panel(input: &str) -> Result<BoardPanel, nom::Err<nom::err
         Vec::new()
     } else {
         panic!(
-            "Unexpected number of notes sections: {}",
+            "Expected either 1 or no notes sections, but found: {}",
             wrapped_notes.len()
         );
     };
@@ -95,7 +95,7 @@ pub fn parse_board_or_panel(input: &str) -> Result<BoardPanel, nom::Err<nom::err
         component_placements,
     };
 
-    // Check if there are any unparsed data remaining
+    // Check if there is any unparsed data remaining
     if !remaining.is_empty() {
         return Err(nom::Err::Error(nom::error::Error::new(
             remaining,
@@ -109,7 +109,7 @@ pub fn parse_board_or_panel(input: &str) -> Result<BoardPanel, nom::Err<nom::err
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::primitives::Point;
+    use crate::point::Point;
     #[test]
     fn test_parse_board() {
         let input = ".HEADER
@@ -581,7 +581,7 @@ sample_board pn-board BOARD
             placement_status: "MCAD".to_string(),
         }];
 
-        let expected_board = BoardPanel {
+        let expected_panel = BoardPanel {
             header,
             outline,
             other_outlines: vec![],
@@ -596,7 +596,7 @@ sample_board pn-board BOARD
             component_placements,
         };
 
-        let board = parse_board_or_panel(input).unwrap();
-        assert_eq!(board, expected_board);
+        let panel = parse_board_or_panel(input).unwrap();
+        assert_eq!(panel, expected_panel);
     }
 }

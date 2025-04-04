@@ -1,13 +1,14 @@
 use nom::branch::alt;
 use nom::sequence::delimited;
 
-use crate::primitives::{owner, ws};
+use crate::primitives::ws;
 use crate::ws_separated;
 use nom::bytes::complete::{is_not, tag};
 use nom::multi::many1;
 use nom::number::complete::float;
 use nom::IResult;
 use nom::Parser;
+use crate::outlines::owner;
 
 /// Represents a drilled hole in the IDF format.
 /// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=25

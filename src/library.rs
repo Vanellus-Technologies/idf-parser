@@ -43,7 +43,7 @@ pub(crate) fn parse_library(input: &str) -> Result<Library, nom::Err<nom::error:
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::primitives::Point;
+    use crate::point::Point;
     #[test]
     fn test_library() {
         let input = ".HEADER

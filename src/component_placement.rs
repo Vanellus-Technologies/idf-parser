@@ -1,7 +1,7 @@
 use nom::branch::alt;
 
 use crate::primitives::ws;
-use crate::{section, ws_separated};
+use crate::{parse_section, ws_separated};
 use nom::bytes::complete::{is_not, tag};
 use nom::multi::many0;
 use nom::number::complete::float;
@@ -43,7 +43,7 @@ pub fn component_placement(input: &str) -> IResult<&str, ComponentPlacement> {
             x,
             y,
             mounting_offset,
-            rotation,
+            rotation_angle,
             board_side,
             placement_status,
         ),
@@ -67,7 +67,7 @@ pub fn component_placement(input: &str) -> IResult<&str, ComponentPlacement> {
         x,
         y,
         mounting_offset,
-        rotation_angle: rotation,
+        rotation_angle,
         board_side: board_side.to_string(),
         placement_status: placement_status.to_string(),
     };
@@ -90,7 +90,7 @@ pub fn component_placement(input: &str) -> IResult<&str, ComponentPlacement> {
 /// let (remaining, component_placements) = parse_component_placement_section(input).unwrap();
 /// ```
 pub fn parse_component_placement_section(input: &str) -> IResult<&str, Vec<ComponentPlacement>> {
-    section!("PLACEMENT", ws(many0(component_placement))).parse(input)
+    parse_section!("PLACEMENT", ws(many0(component_placement))).parse(input)
 }
 
 #[cfg(test)]
@@ -129,21 +129,56 @@ dip_14w pn-hs346-dip U4
 2200.0 2500.0 0.0 270.0 TOP ECAD
 .END_PLACEMENT";
 
+        let expected = vec![
+            ComponentPlacement {
+                package_name: "cs13_a".to_string(),
+                part_number: "pn-cap".to_string(),
+                reference_designator: "C1".to_string(),
+                x: 4000.0,
+                y: 1000.0,
+                mounting_offset: 100.0,
+                rotation_angle: 0.0,
+                board_side: "TOP".to_string(),
+                placement_status: "PLACED".to_string(),
+            },
+            ComponentPlacement {
+                package_name: "cc1210".to_string(),
+                part_number: "pn-cc1210".to_string(),
+                reference_designator: "C2".to_string(),
+                x: 3000.0,
+                y: 3500.0,
+                mounting_offset: 0.0,
+                rotation_angle: 0.0,
+                board_side: "TOP".to_string(),
+                placement_status: "UNPLACED".to_string(),
+            },
+            ComponentPlacement {
+                package_name: "cc1210".to_string(),
+                part_number: "pn-cc1210".to_string(),
+                reference_designator: "C3".to_string(),
+                x: 3200.0,
+                y: 1800.0,
+                mounting_offset: 0.0,
+                rotation_angle: 0.0,
+                board_side: "BOTTOM".to_string(),
+                placement_status: "MCAD".to_string(),
+            },
+            ComponentPlacement {
+                package_name: "dip_14w".to_string(),
+                part_number: "pn-hs346-dip".to_string(),
+                reference_designator: "U4".to_string(),
+                x: 2200.0,
+                y: 2500.0,
+                mounting_offset: 0.0,
+                rotation_angle: 270.0,
+                board_side: "TOP".to_string(),
+                placement_status: "ECAD".to_string(),
+            },
+        ];
+
         let (remaining, component_placements) = parse_component_placement_section(input).unwrap();
         assert_eq!(remaining, "");
-        assert_eq!(component_placements.len(), 4);
-        assert_eq!(component_placements[0].package_name, "cs13_a");
-        assert_eq!(component_placements[0].part_number, "pn-cap");
-        assert_eq!(component_placements[0].reference_designator, "C1");
-        assert_eq!(component_placements[0].x, 4000.0);
-        assert_eq!(component_placements[0].y, 1000.0);
-        assert_eq!(component_placements[0].mounting_offset, 100.0);
-        assert_eq!(component_placements[0].rotation_angle, 0.0);
-        assert_eq!(component_placements[0].board_side, "TOP");
-        assert_eq!(component_placements[0].placement_status, "PLACED");
-        assert_eq!(component_placements[1].placement_status, "UNPLACED");
-        assert_eq!(component_placements[2].placement_status, "MCAD");
-        assert_eq!(component_placements[3].placement_status, "ECAD");
+        assert_eq!(component_placements, expected);
     }
     #[test]
     fn test_invalid_component_placement() {

@@ -1,16 +1,6 @@
-use nom::branch::alt;
-use nom::bytes::complete::tag;
 use nom::character::complete::u32;
 use nom::number::complete::float;
-use nom::sequence::preceded;
-use nom::{
-    IResult, Parser, character::complete::multispace0, error::ParseError, sequence::delimited,
-};
-
-/// Determine the owner of an outline or set of holes.
-pub fn owner(input: &str) -> IResult<&str, &str> {
-    alt((tag("ECAD"), tag("MCAD"), tag("UNOWNED"))).parse(input)
-}
+use nom::{character::complete::multispace0, error::ParseError, sequence::delimited, Parser};
 
 /// A combinator that takes a parser `inner` and produces a parser that also consumes both leading and
 /// trailing whitespace, returning the output of `inner`.
@@ -53,20 +43,20 @@ macro_rules! ws_separated {
 /// # Example
 ///
 /// ```
-/// use idf_parser::primitives::{point, ws};
-/// use idf_parser::section;
+/// use idf_parser::primitives::ws;
+/// use idf_parser::parse_section;
 /// use nom::Parser;
 /// use nom::sequence::delimited;
 /// use nom::bytes::complete::tag;
 ///
 /// let input = ".SECTION
-/// 0 100.0 200.0 45.0
+/// howdy!
 /// .END_SECTION";
 ///
-/// let (remaining, point) = section!("SECTION", point).parse(input).unwrap();
+/// let (remaining, point) = parse_section!("SECTION", tag("howdy!")).parse(input).unwrap();
 /// ```
 #[macro_export]
-macro_rules! section {
+macro_rules! parse_section {
     ($section:expr, $parser:expr) => {
         delimited(
             ws(tag(format!(".{}", $section).as_str())),
@@ -76,86 +66,10 @@ macro_rules! section {
     };
 }
 
-/// Represents a point which exists as part of 2D loop of points which describe an outline of a
-/// component or board section.
-///
-/// Used repeatedly in the IDF format to represent points in a loop.
-/// First mention here:
-/// http://www.simplifiedsolutionsinc.com/images/idf_v30_spec.pdf#page=10 in Record 3
-#[derive(Debug, PartialEq, Clone)]
-pub struct Point {
-    /// The label of the loop the point exist in, 0 for counter-clockwise, 1 for clockwise.
-    pub loop_label: u32,
-    /// The x coordinate of the point.
-    pub x: f32,
-    /// The y coordinate of the point.
-    pub y: f32,
-    /// 0 for a straight line, between 0 and 360 for an arc, 360 for a full circle.
-    pub angle: f32,
-}
-
-/// Parses a point from the input string.
-///
-/// # Example
-/// ```
-/// use idf_parser::primitives::{point, Point};
-/// let input = "0 100.0 200.0 45.0";
-///
-/// let (remaining, point) = point(input).unwrap();
-/// assert_eq!(point, Point { loop_label: 0, x: 100.0, y: 200.0, angle: 45.0 });
-/// ```
-pub fn point(input: &str) -> IResult<&str, Point> {
-    let (remaining, (label, x, y, angle)) = (
-        u32,
-        preceded(tag(" "), float),
-        preceded(tag(" "), float),
-        preceded(tag(" "), float),
-    )
-        .parse(input)?;
-    let point = Point {
-        loop_label: label,
-        x,
-        y,
-        angle,
-    };
-    Ok((remaining, point))
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn test_owner() {
-        let input = "ECADMCADUNOWNED";
-        let (remaining, owner_str) = owner(input).unwrap();
-        assert_eq!(remaining, "MCADUNOWNED");
-        assert_eq!(owner_str, "ECAD");
-
-        let (remaining, owner_str) = owner(remaining).unwrap();
-        assert_eq!(remaining, "UNOWNED");
-        assert_eq!(owner_str, "MCAD");
-
-        let (remaining, owner_str) = owner(remaining).unwrap();
-        assert_eq!(remaining, "");
-        assert_eq!(owner_str, "UNOWNED");
-    }
-
-    #[test]
-    fn test_point() {
-        let input = "0 100.0 200.0 45.0";
-        let (remaining, point) = point(input).unwrap();
-        assert_eq!(remaining, "");
-        assert_eq!(
-            point,
-            Point {
-                loop_label: 0,
-                x: 100.0,
-                y: 200.0,
-                angle: 45.0
-            }
-        );
-    }
+    use nom::bytes::complete::tag;
 
     #[test]
     fn test_ws() {
@@ -185,17 +99,11 @@ mod tests {
 
     #[test]
     fn test_section() {
-        let input = ".SECTION\n0 100.0 200.0 45.0\n.END_SECTION";
-        let (remaining, point) = section!("SECTION", point).parse(input).unwrap();
+        let input = ".SECTION\n123 456\n.END_SECTION";
+        let (remaining, ints) = parse_section!("SECTION", (ws(u32), ws(u32)))
+            .parse(input)
+            .unwrap();
         assert_eq!(remaining, "");
-        assert_eq!(
-            point,
-            Point {
-                loop_label: 0,
-                x: 100.0,
-                y: 200.0,
-                angle: 45.0
-            }
-        );
+        assert_eq!(ints, (123, 456));
     }
 }

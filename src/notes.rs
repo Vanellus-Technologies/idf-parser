@@ -1,5 +1,5 @@
 use crate::primitives::ws;
-use crate::ws_separated;
+use crate::{parse_section, ws_separated};
 use nom::bytes::complete::{is_not, tag};
 use nom::multi::many1;
 use nom::number::complete::float;
@@ -57,7 +57,7 @@ fn note(input: &str) -> IResult<&str, Note> {
 /// assert_eq!(notes.len(), 2);
 /// ```
 pub fn parse_notes_section(input: &str) -> IResult<&str, Vec<Note>> {
-    delimited(tag(".NOTES\n"), many1(ws(note)), tag(".END_NOTES")).parse(input)
+    parse_section!("NOTES", many1(ws(note))).parse(input)
 }
 
 #[cfg(test)]
