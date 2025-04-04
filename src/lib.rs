@@ -8,9 +8,9 @@
 //! use idf_parser::parse_board_file;
 //! use idf_parser::parse_library_file;
 //!
-//! let board = parse_board_file("src/board.emn").unwrap();
-//! let panel = parse_board_file("src/panel.emn").unwrap();
-//! let library = parse_library_file("src/library.emp").unwrap();
+//! let board = parse_board_file("src/test_files/board.emn").unwrap();
+//! let panel = parse_board_file("src/test_files/panel.emn").unwrap();
+//! let library = parse_library_file("src/test_files/library.emp").unwrap();
 //! ```
 
 use crate::board::BoardPanel;
@@ -57,7 +57,11 @@ pub fn parse_library_file(file_path: &str) -> Result<library::Library, String> {
     }
 }
 
-/// Parse an optional panel file, library file and 1 or more board files and validate them.
+/// Parse an optional panel file, library file, and 1 or more board files and validate them.
+///
+/// An assembly is either a single board and a library file, or a panel file,
+/// 1 or more board files and a library file.
+/// Here we parse all the provided files and check that all board and component references are valid.
 fn parse_assembly(
     panel_file: Option<&str>,
     library_file: &str,
@@ -93,20 +97,26 @@ mod tests {
 
     #[test]
     fn test_parse_board_file() {
-        parse_board_file("src/board.emn").unwrap();
+        parse_board_file("src/test_files/board.emn").unwrap();
     }
     #[test]
     fn test_parse_library_file() {
-        parse_library_file("src/library.emp").unwrap();
+        parse_library_file("src/test_files/library.emp").unwrap();
     }
 
     #[test]
     fn test_parse_assembly() {
-        let panel = Some("src/panel.emn");
-        let library = "src/library.emp";
-        let boards = vec!["src/board.emn"];
+        let panel = Some("src/test_files/panel.emn");
+        let library = "src/test_files/library.emp";
+        let boards = vec!["src/test_files/board.emn"];
 
-        let result = parse_assembly(panel, library, boards);
+        let result = parse_assembly(panel, library, boards.clone());
         assert!(result.is_ok());
+
+        // This panel file references a board that doesn't exist
+        let invalid_panel = Some("src/test_files/invalid_panel.emn");
+
+        let result = parse_assembly(invalid_panel, library, boards);
+        assert!(result.is_err());
     }
 }

@@ -3,6 +3,10 @@ use crate::library::Library;
 use std::collections::HashSet;
 
 /// Validate that a Library struct contains all the components referenced in board struct.
+///
+/// A board file can reference a number of components which have properties and outlines defined in
+/// the library file. To confirm that the board file is valid, we need to check that every
+/// referenced component is defined in the library file.
 pub(crate) fn library_references_valid(
     library: &Library,
     board: &BoardPanel,
@@ -11,7 +15,6 @@ pub(crate) fn library_references_valid(
 
     // Collect all component references from the board
     for component in board.component_placements.iter() {
-        // If not BOARD or NOREFDES
         if component.reference_designator == "BOARD" {
             continue;
         }
@@ -80,8 +83,8 @@ mod tests {
 
     #[test]
     fn test_library_references_valid() {
-        let library = parse_library_file("src/library.emp").unwrap();
-        let board = parse_board_file("src/board.emn").unwrap();
+        let library = parse_library_file("src/test_files/library.emp").unwrap();
+        let board = parse_board_file("src/test_files/board.emn").unwrap();
 
         let result = library_references_valid(&library, &board);
 
@@ -108,8 +111,8 @@ mod tests {
     }
     #[test]
     fn test_panel_references_valid() {
-        let panel = parse_board_file("src/panel.emn").unwrap();
-        let boards = vec![parse_board_file("src/board.emn").unwrap()];
+        let panel = parse_board_file("src/test_files/panel.emn").unwrap();
+        let boards = vec![parse_board_file("src/test_files/board.emn").unwrap()];
 
         let result = panel_references_valid(&panel, &boards);
 

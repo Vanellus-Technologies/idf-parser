@@ -1,2 +1,2 @@
 # idf-parser
-Rust crate for parsing Intermediate Data Format file used in PCB design.
+Rust crate for parsing Intermediate Data Format files used in PCB design.
