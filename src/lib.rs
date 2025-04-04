@@ -8,10 +8,13 @@
 //! use idf_parser::parse_board_file;
 //! use idf_parser::parse_library_file;
 //!
-//! let board = parse_board_file("src/board.emn").unwrap();
-//! let panel = parse_board_file("src/panel.emn").unwrap();
-//! let library = parse_library_file("src/library.emp").unwrap();
+//! let board = parse_board_file("src/test_files/board.emn").unwrap();
+//! let panel = parse_board_file("src/test_files/panel.emn").unwrap();
+//! let library = parse_library_file("src/test_files/library.emp").unwrap();
 //! ```
+
+use crate::board::BoardPanel;
+use crate::library::Library;
 
 pub mod board;
 pub mod component_placement;
@@ -23,6 +26,7 @@ pub mod notes;
 mod outlines;
 pub mod point;
 pub mod primitives;
+mod validation;
 
 /// Take in the path a board or panel .emn file and return a Board struct.
 pub fn parse_board_file(file_path: &str) -> Result<board::BoardPanel, String> {
@@ -53,16 +57,66 @@ pub fn parse_library_file(file_path: &str) -> Result<library::Library, String> {
     }
 }
 
+/// Parse an optional panel file, library file, and 1 or more board files and validate them.
+///
+/// An assembly is either a single board and a library file, or a panel file,
+/// 1 or more board files and a library file.
+/// Here we parse all the provided files and check that all board and component references are valid.
+fn parse_assembly(
+    panel_file: Option<&str>,
+    library_file: &str,
+    board_files: Vec<&str>,
+) -> Result<(Option<BoardPanel>, Library, Vec<BoardPanel>), String> {
+    let mut boards = Vec::new();
+
+    let panel = match panel_file {
+        Some(file) => Some(parse_board_file(file)?),
+        None => None,
+    };
+
+    let library = parse_library_file(library_file)?;
+
+    for board_file in board_files {
+        boards.push(parse_board_file(board_file)?);
+    }
+
+    for board in &boards {
+        validation::library_references_valid(&library, board)?;
+    }
+
+    if let Some(panel) = &panel {
+        validation::panel_references_valid(panel, &boards)?;
+    }
+
+    Ok((panel, library, boards))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn test_parse_board_file() {
-        parse_board_file("src/board.emn").unwrap();
+        parse_board_file("src/test_files/board.emn").unwrap();
     }
     #[test]
     fn test_parse_library_file() {
-        parse_library_file("src/library.emp").unwrap();
+        parse_library_file("src/test_files/library.emp").unwrap();
+    }
+
+    #[test]
+    fn test_parse_assembly() {
+        let panel = Some("src/test_files/panel.emn");
+        let library = "src/test_files/library.emp";
+        let boards = vec!["src/test_files/board.emn"];
+
+        let result = parse_assembly(panel, library, boards.clone());
+        assert!(result.is_ok());
+
+        // This panel file references a board that doesn't exist
+        let invalid_panel = Some("src/test_files/invalid_panel.emn");
+
+        let result = parse_assembly(invalid_panel, library, boards);
+        assert!(result.is_err());
     }
 }
