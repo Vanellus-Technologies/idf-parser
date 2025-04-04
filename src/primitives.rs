@@ -14,11 +14,11 @@ pub fn owner(input: &str) -> IResult<&str, &str> {
 
 /// A combinator that takes a parser `inner` and produces a parser that also consumes both leading and
 /// trailing whitespace, returning the output of `inner`.
-pub fn ws<'a, O, F>(
-    inner: F,
-) -> impl Parser<&'a str, Output = O, Error = nom::error::Error<&'a str>>
+pub fn ws<'a, Output, Function>(
+    inner: Function,
+) -> impl Parser<&'a str, Output = Output, Error = nom::error::Error<&'a str>>
 where
-    F: Parser<&'a str, Output = O, Error = nom::error::Error<&'a str>>,
+    Function: Parser<&'a str, Output = Output, Error = nom::error::Error<&'a str>>,
 {
     delimited(multispace0, inner, multispace0)
 }
@@ -42,15 +42,6 @@ where
 macro_rules! ws_separated {
     (($($parser:expr),+)) => {
         ($(ws($parser)),+)
-    };
-}
-
-/// A macro which takes  in a parser and a tuple of sub_parsers,
-/// repeatedly apply parser to the tuple of sub_parsers, and return a tuple of parsers
-#[macro_export]
-macro_rules! wrap {
-    ($parser_a:expr, ($($sub_parsers:expr),+)) => {
-        ($($parser_a($sub_parsers)),+)
     };
 }
 
@@ -85,11 +76,16 @@ macro_rules! section {
     };
 }
 
-/// Represents a point in a loop.
+/// Represents a point which exists as part of 2D loop of points which describe an outline of a
+/// component or board section.
+///
+/// Used repeatedly in the IDF format to represent points in a loop.
+/// First mention here:
+/// http://www.simplifiedsolutionsinc.com/images/idf_v30_spec.pdf#page=10 in Record 3
 #[derive(Debug, PartialEq)]
 pub struct Point {
-    /// The label of the point, 0 for counter-clockwise, 1 for clockwise.
-    pub label: u32,
+    /// The label of the loop the point exist in, 0 for counter-clockwise, 1 for clockwise.
+    pub loop_label: u32,
     /// The x coordinate of the point.
     pub x: f32,
     /// The y coordinate of the point.
@@ -106,7 +102,7 @@ pub struct Point {
 /// let input = "0 100.0 200.0 45.0";
 ///
 /// let (remaining, point) = point(input).unwrap();
-/// assert_eq!(point, Point { label: 0, x: 100.0, y: 200.0, angle: 45.0 });
+/// assert_eq!(point, Point { loop_label: 0, x: 100.0, y: 200.0, angle: 45.0 });
 /// ```
 pub fn point(input: &str) -> IResult<&str, Point> {
     let (remaining, (label, x, y, angle)) = (
@@ -116,14 +112,34 @@ pub fn point(input: &str) -> IResult<&str, Point> {
         preceded(tag(" "), float),
     )
         .parse(input)?;
-    let point = Point { label, x, y, angle };
+    let point = Point {
+        loop_label: label,
+        x,
+        y,
+        angle,
+    };
     Ok((remaining, point))
 }
 
-/// tests
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_owner() {
+        let input = "ECADMCADUNOWNED";
+        let (remaining, owner_str) = owner(input).unwrap();
+        assert_eq!(remaining, "MCADUNOWNED");
+        assert_eq!(owner_str, "ECAD");
+
+        let (remaining, owner_str) = owner(remaining).unwrap();
+        assert_eq!(remaining, "UNOWNED");
+        assert_eq!(owner_str, "MCAD");
+
+        let (remaining, owner_str) = owner(remaining).unwrap();
+        assert_eq!(remaining, "");
+        assert_eq!(owner_str, "UNOWNED");
+    }
 
     #[test]
     fn test_point() {
@@ -133,12 +149,25 @@ mod tests {
         assert_eq!(
             point,
             Point {
-                label: 0,
+                loop_label: 0,
                 x: 100.0,
                 y: 200.0,
                 angle: 45.0
             }
         );
+    }
+
+    #[test]
+    fn test_ws() {
+        let input = "\r0 \n\n\n100.0   200.0 \n45.0  ";
+        let (remaining, (label, x, y, angle)) = (ws(u32), ws(float), ws(float), ws(float))
+            .parse(input)
+            .unwrap();
+        assert_eq!(remaining, "");
+        assert_eq!(label, 0);
+        assert_eq!(x, 100.0);
+        assert_eq!(y, 200.0);
+        assert_eq!(angle, 45.0);
     }
 
     #[test]
@@ -162,22 +191,11 @@ mod tests {
         assert_eq!(
             point,
             Point {
-                label: 0,
+                loop_label: 0,
                 x: 100.0,
                 y: 200.0,
                 angle: 45.0
             }
         );
-    }
-    #[test]
-    fn test_wrap() {
-        let input = "0 100.0 200.0 45.0";
-        let (remaining, (label, x, y, angle)) =
-            wrap!(ws, (u32, float, float, float)).parse(input).unwrap();
-        assert_eq!(remaining, "");
-        assert_eq!(label, 0);
-        assert_eq!(x, 100.0);
-        assert_eq!(y, 200.0);
-        assert_eq!(angle, 45.0);
     }
 }

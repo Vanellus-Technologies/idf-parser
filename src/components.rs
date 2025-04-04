@@ -204,9 +204,18 @@ cs13_a pn-cap THOU 150.0
         assert_eq!(
             component.outline[0],
             Point {
-                label: 0,
+                loop_label: 0,
                 x: -55.0,
                 y: 55.0,
+                angle: 0.0
+            }
+        );
+        assert_eq!(
+            component.outline[4],
+            Point {
+                loop_label: 0,
+                x: 565.0,
+                y: -80.0,
                 angle: 0.0
             }
         );

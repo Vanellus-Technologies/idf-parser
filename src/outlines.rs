@@ -323,7 +323,7 @@ mod tests {
         assert_eq!(board_outline.owner, "MCAD");
         assert_eq!(board_outline.thickness, 62.0);
         assert_eq!(board_outline.outline.len(), 3);
-        assert_eq!(board_outline.outline[0].label, 0);
+        assert_eq!(board_outline.outline[0].loop_label, 0);
         assert_eq!(board_outline.outline[0].x, 5.5);
         assert_eq!(board_outline.outline[0].y, -120.0);
         assert_eq!(board_outline.outline[0].angle, 0.0);
@@ -343,7 +343,7 @@ my_outline 62.0 TOP
         assert_eq!(other_outline.extrude_thickness, 62.0);
         assert_eq!(other_outline.board_side, "TOP");
         assert_eq!(other_outline.outline.len(), 1);
-        assert_eq!(other_outline.outline[0].label, 0);
+        assert_eq!(other_outline.outline[0].loop_label, 0);
         assert_eq!(other_outline.outline[0].x, 5.5);
         assert_eq!(other_outline.outline[0].y, -120.0);
         assert_eq!(other_outline.outline[0].angle, 0.0);
@@ -362,7 +362,7 @@ ALL
         assert_eq!(routing_outline.owner, "ECAD");
         assert_eq!(routing_outline.routing_layers, "ALL");
         assert_eq!(routing_outline.outline.len(), 2);
-        assert_eq!(routing_outline.outline[0].label, 0);
+        assert_eq!(routing_outline.outline[0].loop_label, 0);
         assert_eq!(routing_outline.outline[0].x, 5112.5);
         assert_eq!(routing_outline.outline[0].y, 150.0);
         assert_eq!(routing_outline.outline[0].angle, 0.0);
@@ -381,7 +381,7 @@ TOP 1000.0
         assert_eq!(placement_outline.board_side, "TOP");
         assert_eq!(placement_outline.outline_height, 1000.0);
         assert_eq!(placement_outline.outline.len(), 1);
-        assert_eq!(placement_outline.outline[0].label, 0);
+        assert_eq!(placement_outline.outline[0].loop_label, 0);
         assert_eq!(placement_outline.outline[0].x, -5.0);
         assert_eq!(placement_outline.outline[0].y, 2034.9);
         assert_eq!(placement_outline.outline[0].angle, -152.9);
@@ -400,7 +400,7 @@ ALL
         assert_eq!(routing_keepout.owner, "ECAD");
         assert_eq!(routing_keepout.routing_layers, "ALL");
         assert_eq!(routing_keepout.outline.len(), 2);
-        assert_eq!(routing_keepout.outline[0].label, 0);
+        assert_eq!(routing_keepout.outline[0].loop_label, 0);
         assert_eq!(routing_keepout.outline[0].x, 2650.0);
         assert_eq!(routing_keepout.outline[0].y, 2350.0);
         assert_eq!(routing_keepout.outline[0].angle, 0.0);
@@ -416,7 +416,7 @@ ALL
         assert_eq!(remaining, "");
         assert_eq!(via_keepout.owner, "ECAD");
         assert_eq!(via_keepout.outline.len(), 2);
-        assert_eq!(via_keepout.outline[0].label, 0);
+        assert_eq!(via_keepout.outline[0].loop_label, 0);
         assert_eq!(via_keepout.outline[0].x, 2650.0);
         assert_eq!(via_keepout.outline[0].y, 2350.0);
         assert_eq!(via_keepout.outline[0].angle, 0.0);
@@ -436,7 +436,7 @@ TOP 300.0
         assert_eq!(placement_keepout.board_side, "TOP");
         assert_eq!(placement_keepout.keepout_height, 300.0);
         assert_eq!(placement_keepout.outline.len(), 2);
-        assert_eq!(placement_keepout.outline[0].label, 0);
+        assert_eq!(placement_keepout.outline[0].loop_label, 0);
         assert_eq!(placement_keepout.outline[0].x, 3700.0);
         assert_eq!(placement_keepout.outline[0].y, 5000.0);
         assert_eq!(placement_keepout.outline[0].angle, 0.0);
@@ -455,7 +455,7 @@ TOP the_best_group
         assert_eq!(placement_group_area.board_side, "TOP");
         assert_eq!(placement_group_area.group_name, "the_best_group");
         assert_eq!(placement_group_area.outline.len(), 1);
-        assert_eq!(placement_group_area.outline[0].label, 0);
+        assert_eq!(placement_group_area.outline[0].loop_label, 0);
         assert_eq!(placement_group_area.outline[0].x, 5.5);
         assert_eq!(placement_group_area.outline[0].y, -120.0);
         assert_eq!(placement_group_area.outline[0].angle, 0.0);
@@ -467,7 +467,7 @@ TOP the_best_group
         let (remaining, point) = point(input).unwrap();
 
         assert_eq!(remaining, "");
-        assert_eq!(point.label, 0);
+        assert_eq!(point.loop_label, 0);
         assert_eq!(point.x, 5.5);
         assert_eq!(point.y, -120.0);
         assert_eq!(point.angle, 0.0);

@@ -1,10 +1,11 @@
 use crate::primitives::ws;
-use nom::IResult;
-use nom::Parser;
+use crate::ws_separated;
 use nom::bytes::complete::{is_not, tag};
 use nom::multi::many1;
 use nom::number::complete::float;
 use nom::sequence::delimited;
+use nom::IResult;
+use nom::Parser;
 
 /// A board or panel file note.
 /// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=26
@@ -24,14 +25,14 @@ pub struct Note {
 }
 
 fn note(input: &str) -> IResult<&str, Note> {
-    let (remaining, (x, y, text_height, test_string_physical_length, text)) = (
-        ws(float),                                         // x
-        ws(float),                                         // y
-        ws(float),                                         // text height
-        ws(float),                                         // test string physical length
-        ws(delimited(tag("\""), is_not("\""), tag("\""))), // text
-    )
-        .parse(input)?;
+    let (remaining, (x, y, text_height, test_string_physical_length, text)) = ws_separated!((
+        float,                                         // x
+        float,                                         // y
+        float,                                         // text height
+        float,                                         // test string physical length
+        delimited(tag("\""), is_not("\""), tag("\""))  // text
+    ))
+    .parse(input)?;
     let note = Note {
         x,
         y,

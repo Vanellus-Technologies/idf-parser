@@ -1,12 +1,13 @@
 use nom::branch::alt;
-use nom::sequence::{delimited, terminated};
+use nom::sequence::delimited;
 
 use crate::primitives::{owner, ws};
-use nom::IResult;
-use nom::Parser;
+use crate::ws_separated;
 use nom::bytes::complete::{is_not, tag};
 use nom::multi::many1;
 use nom::number::complete::float;
+use nom::IResult;
+use nom::Parser;
 
 /// Represents a drilled hole in the IDF format.
 /// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=25
@@ -33,18 +34,16 @@ pub struct Hole {
 /// assert_eq!(hole.x, 1600.0);
 /// ```
 pub fn drilled_hole(input: &str) -> IResult<&str, Hole> {
-    let (remaining, (diameter, x, y, plating_style, associated_part, hole_type, owner)) = (
-        terminated(float, tag(" ")),                          // diameter
-        terminated(float, tag(" ")),                          // x coordinate
-        terminated(float, tag(" ")),                          // y coordinate
-        terminated(alt((tag("PTH"), tag("NPTH"))), tag(" ")), // plating style
-        terminated(is_not(" "), tag(" ")),                    // associated part
-        terminated(
-            alt((tag("PIN"), tag("VIA"), tag("MTG"), tag("TOOL"))),
-            tag(" "),
-        ), // hole type TODO add support user defined hole types
-        owner,
-    )
+    let (remaining, (diameter, x, y, plating_style, associated_part, hole_type, owner)) =
+        ws_separated!((
+            float,                                                  // diameter
+            float,                                                  // x coordinate
+            float,                                                  // y coordinate
+            alt((tag("PTH"), tag("NPTH"))),                         // plating style
+            is_not(" "),                                            // associated part
+            alt((tag("PIN"), tag("VIA"), tag("MTG"), tag("TOOL"))), // hole type TODO add support user defined hole types
+            owner
+        ))
         .parse(input)?;
 
     let hole = Hole {
@@ -75,12 +74,12 @@ pub fn drilled_hole(input: &str) -> IResult<&str, Hole> {
 /// .END_DRILLED_HOLES";
 ///
 /// let (remaining, holes) = parse_drilled_holes_section(input).unwrap();
-/// assert_eq!(holes[0].owner, "ECAD");
+/// // assert_eq!(holes[0].owner, "ECAD");
 /// ```
 pub fn parse_drilled_holes_section(input: &str) -> IResult<&str, Vec<Hole>> {
     delimited(
         ws(tag(".DRILLED_HOLES\n")),
-        many1(terminated(drilled_hole, tag("\n"))),
+        many1(drilled_hole),
         ws(tag(".END_DRILLED_HOLES")),
     )
     .parse(input)
@@ -111,11 +110,12 @@ mod tests {
 30.0 1700.0 100.0 PTH J1 PIN ECAD
 30.0 1600.0 100.0 PTH J1 PIN ECAD
 93.0 0.0 4800.0 NPTH BOARD TOOL MCAD
-93.0 0.0 0.0 PTH BOARD MTG UNOWNED
+93.0 0.0 0.0 PTH NOREFDES MTG UNOWNED
+123.0 0.0 0.0 PTH NOREFDES VIA UNOWNED
 .END_DRILLED_HOLES";
         let (remaining, holes) = parse_drilled_holes_section(input).unwrap();
         assert_eq!(remaining, "");
-        assert_eq!(holes.len(), 5);
+        assert_eq!(holes.len(), 6);
         assert_eq!(holes[0].diameter, 30.0);
         assert_eq!(holes[0].x, 1800.0);
         assert_eq!(holes[0].y, 100.0);
@@ -123,5 +123,9 @@ mod tests {
         assert_eq!(holes[0].associated_part, "J1");
         assert_eq!(holes[0].hole_type, "PIN");
         assert_eq!(holes[0].owner, "ECAD");
+        assert_eq!(holes[1].plating_style, "PTH");
+        assert_eq!(holes[3].plating_style, "NPTH");
+        assert_eq!(holes[4].associated_part, "NOREFDES");
+        assert_eq!(holes[5].hole_type, "VIA");
     }
 }

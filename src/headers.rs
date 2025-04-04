@@ -2,7 +2,7 @@ use nom::branch::alt;
 use nom::sequence::{delimited, terminated};
 
 use crate::primitives::ws;
-use crate::section;
+use crate::{section, ws_separated};
 use nom::bytes::complete::{is_not, tag};
 use nom::IResult;
 use nom::Parser;
@@ -10,30 +10,20 @@ use nom::Parser;
 pub struct LibraryHeader {
     pub version: u32, // which IDF version, should be 3.0
     pub system_id: String,
-    pub date: String, // I don't care about decomposing this for now
+    pub date: String, // We don't decompose this for now
     pub file_version: u32,
 }
 pub struct BoardPanelHeader {
     pub file_type: String, // BOARD_FILE or PANEL_FILE
     pub version: u32,      // which IDF version, should be 3.0
     pub system_id: String,
-    pub date: String, // I don't care about decomposing this for now
+    pub date: String, // We don't decompose this for now
     pub file_version: u32,
     pub board_name: String,
     pub units: String,
 }
 
-fn header_start(input: &str) -> IResult<&str, &str> {
-    ws(tag(".HEADER")).parse(input)
-}
-fn header_end(input: &str) -> IResult<&str, &str> {
-    ws(tag(".END_HEADER")).parse(input)
-}
-
-fn board_name(input: &str) -> IResult<&str, &str> {
-    terminated(is_not(" "), tag(" ")).parse(input)
-}
-
+/// Parses the first line of the header section.
 fn header_metadata(input: &str) -> IResult<&str, (String, u32, String, String, u32)> {
     let (remaining, (file_type, version, system_id, date, file_version)) = (
         ws(alt((
@@ -76,18 +66,11 @@ fn header_metadata(input: &str) -> IResult<&str, (String, u32, String, String, u
 /// assert_eq!(header.units, "THOU");
 /// ```
 pub fn parse_board_or_panel_header(input: &str) -> IResult<&str, BoardPanelHeader> {
-    // let (remaining, (version, system_id, date, file_version)) =
-    //     preceded(header_start, header_metadata).parse(input)?;
-    //
-    // let (remaining, (board_name, units)) =
-    //     terminated(ws((board_name, alt((tag("THOU"), tag("MM"))))), header_end).parse(remaining)?;
-    //
-
     let (remaining, (metadata, (board_name, units))) = section!(
         "HEADER",
         (
             header_metadata,
-            ws((board_name, alt((tag("THOU"), tag("MM"))))),
+            ws_separated!((is_not(" "), alt((tag("THOU"), tag("MM"))))),
         )
     )
     .parse(input)?;
