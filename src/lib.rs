@@ -29,7 +29,7 @@ pub mod primitives;
 mod validation;
 
 /// Take in the path a board or panel .emn file and return a Board struct.
-pub fn parse_board_file(file_path: &str) -> Result<board::BoardPanel, String> {
+pub fn parse_board_file(file_path: &str) -> Result<BoardPanel, String> {
     if !file_path.ends_with(".emn") {
         return Err("Board and panel files must end with .emn.".to_string());
     }
@@ -43,7 +43,7 @@ pub fn parse_board_file(file_path: &str) -> Result<board::BoardPanel, String> {
 }
 
 /// Take in the path a library .emp file and return a Library struct.
-pub fn parse_library_file(file_path: &str) -> Result<library::Library, String> {
+pub fn parse_library_file(file_path: &str) -> Result<Library, String> {
     if !file_path.ends_with(".emp") {
         return Err("Library files must end with .emp.".to_string());
     }

@@ -1,9 +1,9 @@
 use crate::components::{
-    electrical_component, mechanical_component, ElectricalComponent, MechanicalComponent,
+    ElectricalComponent, MechanicalComponent, electrical_component, mechanical_component,
 };
-use crate::headers::{parse_library_header, LibraryHeader};
-use nom::multi::many0;
+use crate::headers::{LibraryHeader, parse_library_header};
 use nom::Parser;
+use nom::multi::many0;
 use std::collections::HashMap;
 
 #[derive(Debug, PartialEq, Clone)]

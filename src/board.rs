@@ -65,8 +65,7 @@ pub fn parse_board_or_panel(input: &str) -> Result<BoardPanel, nom::Err<nom::err
         // expect one section
         parse_component_placement_section,
     )
-        .parse(input)
-        .unwrap();
+        .parse(input)?;
 
     // Unwrap the notes section, if it exists. We expect there to be either 0 or 1 sections.
     let notes: Vec<Note> = if wrapped_notes.len() == 1 {
@@ -97,10 +96,10 @@ pub fn parse_board_or_panel(input: &str) -> Result<BoardPanel, nom::Err<nom::err
 
     // Check if there is any unparsed data remaining
     if !remaining.is_empty() {
-        return Err(nom::Err::Error(nom::error::Error::new(
+        Err(nom::Err::Error(nom::error::Error::new(
             remaining,
             nom::error::ErrorKind::Eof,
-        )));
+        )))
     } else {
         Ok(board_panel)
     }

@@ -67,14 +67,14 @@ mod tests {
     fn test_note() {
         let input = "3500.0 3300.0 75.0 2500.0 \"This component rotated 14 degrees\"";
 
-        let expected = super::Note {
+        let expected = Note {
             x: 3500.0,
             y: 3300.0,
             text_height: 75.0,
             test_string_physical_length: 2500.0,
             text: "This component rotated 14 degrees".to_string(),
         };
-        let (remaining, note) = super::note(input).unwrap();
+        let (remaining, note) = note(input).unwrap();
         assert_eq!(note, expected);
     }
     #[test]
