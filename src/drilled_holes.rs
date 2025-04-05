@@ -3,11 +3,11 @@ use nom::sequence::delimited;
 
 use crate::outlines::owner;
 use crate::primitives::ws;
-use crate::ws_separated;
+use crate::{parse_section, ws_separated};
 use nom::IResult;
 use nom::Parser;
 use nom::bytes::complete::{is_not, tag};
-use nom::multi::many1;
+use nom::multi::many0;
 use nom::number::complete::float;
 
 /// Represents a drilled hole in the IDF format.
@@ -76,15 +76,9 @@ pub fn drilled_hole(input: &str) -> IResult<&str, Hole> {
 /// .END_DRILLED_HOLES";
 ///
 /// let (remaining, holes) = parse_drilled_holes_section(input).unwrap();
-/// // assert_eq!(holes[0].owner, "ECAD");
 /// ```
 pub fn parse_drilled_holes_section(input: &str) -> IResult<&str, Vec<Hole>> {
-    delimited(
-        ws(tag(".DRILLED_HOLES\n")),
-        many1(drilled_hole),
-        ws(tag(".END_DRILLED_HOLES")),
-    )
-    .parse(input)
+    parse_section!("DRILLED_HOLES", many0(drilled_hole)).parse(input)
 }
 
 #[cfg(test)]
@@ -129,5 +123,13 @@ mod tests {
         assert_eq!(holes[3].plating_style, "NPTH");
         assert_eq!(holes[4].associated_part, "NOREFDES");
         assert_eq!(holes[5].hole_type, "VIA");
+    }
+
+    #[test]
+    fn test_drilled_holes_section_2() {
+        let input = ".DRILLED_HOLES\r\n.END_DRILLED_HOLES\r\n";
+        let (remaining, holes) = parse_drilled_holes_section(input).unwrap();
+        assert_eq!(remaining, "");
+        assert_eq!(holes.len(), 0);
     }
 }

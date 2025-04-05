@@ -96,12 +96,41 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_parse_board_file() {
+    fn test_parse_spec_board_file() {
         parse_board_file("src/test_files/board.emn").unwrap();
     }
     #[test]
+    fn test_parse_isol_board_file() {
+        parse_board_file("src/test_files/ISOL.emn").unwrap();
+    }
+
+    #[test]
+    fn test_parse_beaglebone_board_file() {
+        parse_board_file("src/test_files/beaglebone.emn").unwrap();
+    }
+
+    #[test]
+    fn test_parse_ain_board_file() {
+        parse_board_file("src/test_files/ain.emn").unwrap();
+    }
+
+    #[test]
     fn test_parse_library_file() {
         parse_library_file("src/test_files/library.emp").unwrap();
+    }
+    #[test]
+    fn test_parse_isol_library_file() {
+        parse_library_file("src/test_files/ISOL.emp").unwrap();
+    }
+
+    #[test]
+    fn test_parse_beaglebone_library_file() {
+        parse_library_file("src/test_files/beaglebone.emp").unwrap();
+    }
+
+    #[test]
+    fn test_parse_ain_library_file() {
+        parse_library_file("src/test_files/ain.emp").unwrap();
     }
 
     #[test]
