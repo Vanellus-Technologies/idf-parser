@@ -4,7 +4,6 @@ use crate::components::{
 use crate::headers::{LibraryHeader, parse_library_header};
 use nom::Parser;
 use nom::multi::many0;
-use std::collections::HashMap;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Library {

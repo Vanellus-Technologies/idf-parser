@@ -1,6 +1,4 @@
-use nom::character::complete::u32;
-use nom::number::complete::float;
-use nom::{Parser, character::complete::multispace0, error::ParseError, sequence::delimited};
+use nom::{Parser, character::complete::multispace0, sequence::delimited};
 
 /// A combinator that takes a parser `inner` and produces a parser that also consumes both leading and
 /// trailing whitespace, returning the output of `inner`.
