@@ -115,6 +115,11 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_esp_board_file() {
+        parse_board_file("src/test_files/esp.emn").unwrap();
+    }
+
+    #[test]
     fn test_parse_library_file() {
         parse_library_file("src/test_files/library.emp").unwrap();
     }
@@ -131,6 +136,11 @@ mod tests {
     #[test]
     fn test_parse_ain_library_file() {
         parse_library_file("src/test_files/ain.emp").unwrap();
+    }
+
+    #[test]
+    fn test_parse_esp_library_file() {
+        parse_library_file("src/test_files/esp.emp").unwrap();
     }
 
     #[test]

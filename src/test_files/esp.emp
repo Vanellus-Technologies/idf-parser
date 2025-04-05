@@ -1,0 +1,228 @@
+.HEADER
+LIBRARY_FILE    3.0    "PADS Layout 9.5"    2022/08/24.09:48:03    1
+.END_HEADER
+.ELECTRICAL
+NEON_DIP                                     NEON_DIP_6X13                                MM        15.0                     
+0     0.0                           0.0                           0     
+0     -3.3                          0.0                           360   
+.END_ELECTRICAL
+.ELECTRICAL
+VDIP_RES_1W                                  VDIP_RES_1W                                  MM        10.0                     
+0     -0.85                    -2.67505                 0     
+0     7.45                     -2.67505                 0     
+0     7.45                     2.67505                  0     
+0     -0.85                    2.67505                  0     
+0     -0.85                    -2.67505                 0     
+.END_ELECTRICAL
+.ELECTRICAL
+LED_1615RGB                                  LED_1615RGB                                  MM        0.7                      
+0     -1.2                     -0.8                     0     
+0     1.2                      -0.8                     0     
+0     1.2                      0.8                      0     
+0     -1.2                     0.8                      0     
+0     -1.2                     -0.8                     0     
+.END_ELECTRICAL
+.ELECTRICAL
+CAP_VDIP_10UF_400V                           VDIP_CAP_10UF_400V                           MM        21.5                     
+0     0.0                           0.0                           0     
+0     -5.3                          0.0                           360   
+.END_ELECTRICAL
+.ELECTRICAL
+LOGIC_SOIC-16_74HC595                        LOGIC_74HC595                                MM        1.9                      
+0     -5.0                          -2.0                          0     
+0     5.0                           -2.0                          0     
+0     5.0                           2.0                           0     
+0     -5.0                          2.0                           0     
+0     -5.0                          -2.0                          0     
+.END_ELECTRICAL
+.ELECTRICAL
+TUBE_NIXIE_IN12A                             TUBE_NIXIE_IN12A                             MM        40.0                     
+0     -10.59995                -16.66792                0     
+0     10.59995                 -16.66792                0     
+0     10.59995                 16.66792                 0     
+0     -10.59995                16.66792                 0     
+0     -10.59995                -16.66792                0     
+.END_ELECTRICAL
+.ELECTRICAL
+MOS_PMOS_IRLML6402_SOT23                     TRANS_NPN_MMBTA42_SOT23                      MM        1.2                      
+0     -1.60007                 -1.5                     0     
+0     1.60007                  -1.5                     0     
+0     1.60007                  1.5                      0     
+0     -1.60007                 1.5                      0     
+0     -1.60007                 -1.5                     0     
+.END_ELECTRICAL
+.ELECTRICAL
+R0402                                        R_0402_100_K_5_                              MM        0.5                      
+0     -0.725                        0.4                           0     
+0     -0.725                        -0.4                          0     
+0     0.725                         -0.4                          0     
+0     0.725                         0.4                           0     
+0     -0.725                        0.4                           0     
+.END_ELECTRICAL
+.ELECTRICAL
+1N4148                                       1N4148                                       MM        3.0                      
+0     -0.70002                 -0.99492                 0     
+0     7.20014                  -0.99492                 0     
+0     7.20014                  0.99492                  0     
+0     -0.70002                 0.99492                  0     
+0     -0.70002                 -0.99492                 0     
+.END_ELECTRICAL
+.ELECTRICAL
+BUCK_SY8113_SOT23_6                          BUCK_SY8113ADC                               MM        1.1                      
+0     -1.5                          -0.9                          0     
+0     1.5                           -0.9                          0     
+0     1.5                           0.9                           0     
+0     -1.5                          0.9                           0     
+0     -1.5                          -0.9                          0     
+.END_ELECTRICAL
+.ELECTRICAL
+BUZZ_R12                                     BUZZ_R6                                      MM        9.6                      
+0     0.0                           0.0                           0     
+0     -6.0                          0.0                           360   
+.END_ELECTRICAL
+.ELECTRICAL
+C0402HMM55                                   C_0402_10_NF_16V                             MM        0.7                      
+0     -0.73                    -0.405                   0     
+0     0.73                     -0.405                   0     
+0     0.73                     0.405                    0     
+0     -0.73                    0.405                    0     
+0     -0.73                    -0.405                   0     
+.END_ELECTRICAL
+.ELECTRICAL
+C0402HMM55                                   C_0402_10_UF_6_3V                            MM        0.7                      
+0     -0.73                    -0.405                   0     
+0     0.73                     -0.405                   0     
+0     0.73                     0.405                    0     
+0     -0.73                    0.405                    0     
+0     -0.73                    -0.405                   0     
+.END_ELECTRICAL
+.ELECTRICAL
+C0402HMM55                                   C_0402_100_NF_16V                            MM        0.7                      
+0     -0.73                    -0.405                   0     
+0     0.73                     -0.405                   0     
+0     0.73                     0.405                    0     
+0     -0.73                    0.405                    0     
+0     -0.73                    -0.405                   0     
+.END_ELECTRICAL
+.ELECTRICAL
+C0805H1MM65                                  C_0805H1MM65_10_UF_25V_X5R_10_               MM        1.65                     
+0     -1.455                   -0.805                   0     
+0     1.455                    -0.805                   0     
+0     1.455                    0.805                    0     
+0     -1.455                   0.805                    0     
+0     -1.455                   -0.805                   0     
+.END_ELECTRICAL
+.ELECTRICAL
+DC_DIP_WIRE                                  DC_DIP_WIRE                                  MM        0.5                      
+0     -4.4                          2.0                           0     
+0     -4.4                          -2.0                          0     
+0     4.4                           -2.0                          0     
+0     4.4                           2.0                           0     
+0     -4.4                          2.0                           0     
+.END_ELECTRICAL
+.ELECTRICAL
+AW9523B                                      IC_LED_DRIER_AW9523B_DFN                     MM        1.3                      
+0     -2.3749                  -2.15                    0     
+0     2.15                     -2.15                    0     
+0     2.15                     2.4003                   0     
+0     -2.3749                  2.4003                   0     
+0     -2.3749                  -2.15                    0     
+.END_ELECTRICAL
+.ELECTRICAL
+WPN252010HS100MT                             L_2520H1MM1_10_UH_20__1_1A_SUNLORD           MM        1.1                      
+0     -1.4                          1.15                          0     
+0     -1.4                          -1.15                         0     
+0     1.4                           -1.15                         0     
+0     1.4                           1.15                          0     
+0     -1.4                          1.15                          0     
+.END_ELECTRICAL
+.ELECTRICAL
+LDO_AMS1117_SOT223                           LDO_AMS1117                                  MM        1.9                      
+0     -3.4                          -1.9                          0     
+0     3.4                           -1.9                          0     
+0     3.4                           1.9                           0     
+0     -3.4                          1.9                           0     
+0     -3.4                          -1.9                          0     
+.END_ELECTRICAL
+.ELECTRICAL
+LED_IR_DIP_6MM                               LED_IR_DIP_6MM                               MM        15.0                     
+0     -3.127                   -3.127                   0     
+0     3.127                    -3.127                   0     
+0     3.127                    3.127                    0     
+0     -3.127                   3.127                    0     
+0     -3.127                   -3.127                   0     
+.END_ELECTRICAL
+.ELECTRICAL
+LED_ORANGE_1206                              LED_ORANGE_1206                              MM        0.95                     
+0     -2.45                    -0.85                    0     
+0     2.45                     -0.85                    0     
+0     2.45                     0.85                     0     
+0     -2.45                    0.85                     0     
+0     -2.45                    -0.85                    0     
+.END_ELECTRICAL
+.ELECTRICAL
+MODULE_ESP32_WROOM_32                        MODULE_ESP32_WROOM_32                        MM        3.3                      
+0     -9.5                     -10.33                   0     
+0     9.5                      -10.33                   0     
+0     9.5                      15.845                   0     
+0     -9.5                     15.845                   0     
+0     -9.5                     -10.33                   0     
+.END_ELECTRICAL
+.ELECTRICAL
+MOS_NMOS_3LN01S_SC75                         MOS_NMOS_3LN01S_SC75                         MM        0.85                     
+0     -0.8                          0.4                           0     
+0     -0.8                          -0.4                          0     
+0     0.8                           -0.4                          0     
+0     0.8                           0.4                           0     
+0     -0.8                          0.4                           0     
+.END_ELECTRICAL
+.ELECTRICAL
+MOS_PMOS_IRLML6402_SOT23                     MOS_PMOS_IRLML6402_SOT23                     MM        1.21                     
+0     -1.60007                 -1.5                     0     
+0     1.60007                  -1.5                     0     
+0     1.60007                  1.5                      0     
+0     -1.60007                 1.5                      0     
+0     -1.60007                 -1.5                     0     
+.END_ELECTRICAL
+.ELECTRICAL
+R0402                                        R_0402_10_K_1_                               MM        0.5                      
+0     -0.725                        0.4                           0     
+0     -0.725                        -0.4                          0     
+0     0.725                         -0.4                          0     
+0     0.725                         0.4                           0     
+0     -0.725                        0.4                           0     
+.END_ELECTRICAL
+.ELECTRICAL
+SENSOR_TEMP_DS18B20_TO92                     SENSOR_TEMP_DS18B20_TO92                     MM        15.0                     
+0     -1.46495                 -2.0574                  0     
+0     6.46875                  -2.0574                  0     
+0     6.46875                  4.09961                  0     
+0     -1.46495                 4.09961                  0     
+0     -1.46495                 -2.0574                  0     
+.END_ELECTRICAL
+.ELECTRICAL
+TESTD1MM5                                    TESTD1MM5                                    MM        0.01                     
+0     0.0                           0.0                           0     
+0     -0.75006                      0.0                           360   
+.END_ELECTRICAL
+.ELECTRICAL
+TRANS_TO92_S9013                             TRANS_TO92_S9013                             MM        5.0                      
+0     -3.8735                  -2.6035                  0     
+0     1.3335                   -2.6035                  0     
+0     1.3335                   1.3335                   0     
+0     -3.8735                  1.3335                   0     
+0     -3.8735                  -2.6035                  0     
+.END_ELECTRICAL
+.ELECTRICAL
+CAP_VDIP_47UF_50V                            VDIP_CAP_47UF_50V                            MM        12.6                     
+0     0.0                           0.0                           0     
+0     -3.3                          0.0                           360   
+.END_ELECTRICAL
+.ELECTRICAL
+SENSOR_IR_REC_VS1838                         SENSOR_IR_REC_VS1838                         MM        15.0                     
+0     -3.29                    -3.64482                 0     
+0     3.29                     -3.64482                 0     
+0     3.29                     1.1016                   0     
+0     -3.29                    1.1016                   0     
+0     -3.29                    -3.64482                 0     
+.END_ELECTRICAL
