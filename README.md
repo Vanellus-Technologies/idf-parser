@@ -1,5 +1,9 @@
 # idf-parser
 
+[![Crates.io](https://img.shields.io/crates/v/idf-parser.svg)](https://crates.io/crates/idf-parser)
+[![Documentation](https://docs.rs/idf-parser/badge.svg)](https://docs.rs/idf-parser)
+[![example workflow](https://github.com/Vanellus-Technologies/idf-parser/actions/workflows/main.yaml/badge.svg)](https://github.com/Vanellus-Technologies/idf-parser/actions/workflows/main.yaml)
+
 Rust library for parsing Intermediate Data Format files used in PCB design.
 
 The IDF specification describes three file types:

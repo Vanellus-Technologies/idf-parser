@@ -1,7 +1,7 @@
-name: Check
+name: Check build and tests pass on main
 
 on:
-  pull_request:
+  push:
     branches: [ "main" ]
 
 permissions:
