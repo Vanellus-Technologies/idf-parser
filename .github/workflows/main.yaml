@@ -1,4 +1,4 @@
-name: Check build and tests pass on main
+name: Tests
 
 on:
   push:
