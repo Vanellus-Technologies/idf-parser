@@ -54,9 +54,9 @@ pub(crate) fn parse_library(input: &str) -> Result<Library, nom::Err<nom::error:
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
     use super::*;
     use crate::point::Point;
+    use std::collections::HashMap;
     #[test]
     fn test_library() {
         let input = ".HEADER

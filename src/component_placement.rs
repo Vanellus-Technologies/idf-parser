@@ -51,7 +51,7 @@ pub fn component_placement(input: &str) -> IResult<&str, ComponentPlacement> {
     ) = ws_separated!((
         is_not(" "),                                                      // package name
         is_not(" "),                                                      // part number
-        not_line_ending,                                                     // reference designator
+        not_line_ending,                                                  // reference designator
         float,                                                            // x coordinate
         float,                                                            // y coordinate
         float,                                                            // mounting offset

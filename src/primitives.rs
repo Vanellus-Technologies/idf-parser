@@ -1,5 +1,5 @@
 use nom::bytes::complete::{is_not, tag};
-use nom::{character::complete::multispace0, sequence::delimited, Parser};
+use nom::{Parser, character::complete::multispace0, sequence::delimited};
 
 /// A combinator that takes a parser `inner` and produces a parser that also consumes both leading and
 /// trailing whitespace, returning the output of `inner`.
@@ -84,10 +84,10 @@ pub fn quote_string(input: &str) -> nom::IResult<&str, &str> {
 mod tests {
     use super::*;
     use crate::primitives::ws;
+    use nom::Parser;
     use nom::bytes::complete::tag;
     use nom::character::complete::u32;
     use nom::number::complete::float;
-    use nom::Parser;
 
     #[test]
     fn test_ws() {

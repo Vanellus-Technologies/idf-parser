@@ -84,7 +84,7 @@ pub fn electrical_component(input: &str) -> IResult<&str, ElectricalComponent> {
                 is_not(" "), // geometry name
                 alt((
                     quote_string, // part number with quotes
-                    is_not(" "),                                   // part number without quotes
+                    is_not(" "),  // part number without quotes
                 )),
                 is_not(" "),           // units
                 float,                 // height
