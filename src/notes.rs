@@ -1,4 +1,4 @@
-use crate::primitives::ws;
+use crate::primitives::{quote_string, ws};
 use crate::{parse_section, ws_separated};
 use nom::IResult;
 use nom::Parser;
@@ -26,11 +26,11 @@ pub struct Note {
 
 fn note(input: &str) -> IResult<&str, Note> {
     let (remaining, (x, y, text_height, test_string_physical_length, text)) = ws_separated!((
-        float,                                         // x
-        float,                                         // y
-        float,                                         // text height
-        float,                                         // test string physical length
-        delimited(tag("\""), is_not("\""), tag("\""))  // text
+        float,        // x
+        float,        // y
+        float,        // text height
+        float,        // test string physical length
+        quote_string  // text
     ))
     .parse(input)?;
     let note = Note {

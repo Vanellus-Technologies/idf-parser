@@ -1,5 +1,5 @@
 use crate::point::{Point, point};
-use crate::primitives::ws;
+use crate::primitives::{quote_string, ws};
 use crate::{parse_section, ws_separated};
 use nom::IResult;
 use nom::Parser;
@@ -83,7 +83,7 @@ pub fn electrical_component(input: &str) -> IResult<&str, ElectricalComponent> {
             ws_separated!((
                 is_not(" "), // geometry name
                 alt((
-                    delimited(tag("\""), is_not("\""), tag("\"")), // part number with quotes
+                    quote_string, // part number with quotes
                     is_not(" "),                                   // part number without quotes
                 )),
                 is_not(" "),           // units

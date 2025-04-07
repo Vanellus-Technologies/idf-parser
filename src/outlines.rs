@@ -1,14 +1,15 @@
 use nom::branch::alt;
 use nom::sequence::delimited;
 
-use crate::point::{Point, point};
+use crate::point::{point, Point};
 use crate::primitives::ws;
 use crate::{parse_section, ws_separated};
-use nom::IResult;
-use nom::Parser;
 use nom::bytes::complete::{is_not, tag};
+use nom::character::complete::not_line_ending;
 use nom::multi::many1;
 use nom::number::complete::float;
+use nom::IResult;
+use nom::Parser;
 
 /// Board/panel outline.
 /// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=10
@@ -25,15 +26,7 @@ pub struct BoardPanelOutline {
 
 pub fn parse_board_panel_outline(input: &str) -> IResult<&str, BoardPanelOutline> {
     fn interior_contents(input: &str) -> IResult<&str, (&str, f32, Vec<Point>)> {
-        (
-            ws(owner),
-            ws(float),
-            ws(many1(ws(point))),
-            // terminated(owner, line_ending),
-            // terminated(float, line_ending),
-            // many1(terminated(point, line_ending)),
-        )
-            .parse(input)
+        (ws(owner), ws(float), ws(many1(ws(point)))).parse(input)
     }
 
     let (remaining, (owner, thickness, outline)) = ws(alt((
@@ -74,7 +67,7 @@ pub fn parse_other_outline(input: &str) -> IResult<&str, OtherOutline> {
             owner,            // owner
             is_not(" "),      // ID
             float,            // extrude_thickness
-            is_not("\n\r"),   // board_side
+            not_line_ending,  // board_side
             many1(ws(point))  // outline
         ))
     )
@@ -109,7 +102,7 @@ pub struct RoutingOutline {
 pub fn parse_routing_outline(input: &str) -> IResult<&str, RoutingOutline> {
     let (remaining, (owner, routing_layers, outline)) = parse_section!(
         "ROUTE_OUTLINE",
-        ws_separated!((owner, is_not("\n"), many1(ws(point))))
+        ws_separated!((owner, not_line_ending, many1(ws(point))))
     )
     .parse(input)?;
 
@@ -179,7 +172,7 @@ pub struct RoutingKeepout {
 pub fn parse_routing_keepout(input: &str) -> IResult<&str, RoutingKeepout> {
     let (remaining, (owner, routing_layers, outline)) = parse_section!(
         "ROUTE_KEEPOUT",
-        ws_separated!((owner, is_not("\n\r"), many1(ws(point))))
+        ws_separated!((owner, not_line_ending, many1(ws(point))))
     )
     .parse(input)?;
 
@@ -283,7 +276,7 @@ pub fn parse_placement_group_area(input: &str) -> IResult<&str, PlacementGroupAr
         ws_separated!((
             owner,
             is_not(" "),      // board_side
-            is_not("\n\r"),   // group_name
+            not_line_ending,  // group_name
             many1(ws(point))  // outline
         ))
     )

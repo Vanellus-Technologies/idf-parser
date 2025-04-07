@@ -1,3 +1,4 @@
+use nom::bytes::complete::{is_not, tag};
 use nom::{character::complete::multispace0, sequence::delimited, Parser};
 
 /// A combinator that takes a parser `inner` and produces a parser that also consumes both leading and
@@ -64,6 +65,21 @@ macro_rules! parse_section {
     };
 }
 
+/// Parses a quoted string from the input string.
+///
+/// # Example
+///
+/// ```
+/// use idf_parser::primitives::quote_string;
+///
+/// let input = "\"Hello, World!\"";
+///
+/// let (remaining, quoted_str) = quote_string(input).unwrap();
+///  assert_eq!(quoted_str, "Hello, World!");
+/// ```
+pub fn quote_string(input: &str) -> nom::IResult<&str, &str> {
+    delimited(tag("\""), is_not("\""), tag("\"")).parse(input)
+}
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -107,5 +123,13 @@ mod tests {
             .unwrap();
         assert_eq!(remaining, "");
         assert_eq!(ints, (123, 456));
+    }
+
+    #[test]
+    fn test_quote_string() {
+        let input = "\"Hello, World!\"";
+        let (remaining, quoted_str) = quote_string(input).unwrap();
+        assert_eq!(remaining, "");
+        assert_eq!(quoted_str, "Hello, World!");
     }
 }

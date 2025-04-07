@@ -1,13 +1,14 @@
 use nom::branch::alt;
 use nom::sequence::{delimited, terminated};
 
-use crate::primitives::ws;
+use crate::primitives::{quote_string, ws};
 use crate::{parse_section, ws_separated};
+use nom::bytes::complete::{is_not, tag};
+use nom::character::complete::not_line_ending;
+use nom::error::ErrorKind;
 use nom::Err::Error;
 use nom::Parser;
-use nom::bytes::complete::{is_not, tag};
-use nom::error::ErrorKind;
-use nom::{IResult, error};
+use nom::{error, IResult};
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct LibraryHeader {
@@ -38,11 +39,11 @@ fn header_metadata(input: &str) -> IResult<&str, (String, u32, String, String, u
         ))), // file type
         ws(terminated(tag("3"), tag(".0"))), // version
         ws(alt((
-            delimited(tag("\""), is_not("\""), tag("\"")),
+            quote_string,
             is_not(" "),
         ))), // system id
         ws(is_not(" ")),                     // date
-        ws(is_not("\n\r ")),                 // file version
+        ws(not_line_ending),                 // file version
     )
         .parse(input)?;
 
