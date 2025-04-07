@@ -11,7 +11,7 @@ use nom::number::complete::float;
 use nom::sequence::delimited;
 
 /// Represents a component placement in the IDF format.
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Default, PartialOrd)]
 pub struct ComponentPlacement {
     pub package_name: String,
     pub part_number: String,

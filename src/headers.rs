@@ -10,7 +10,7 @@ use nom::character::complete::not_line_ending;
 use nom::error::ErrorKind;
 use nom::{IResult, error};
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Default, PartialOrd)]
 pub struct LibraryHeader {
     pub version: u32, // which IDF version, should be 3.0
     pub system_id: String,
@@ -18,7 +18,7 @@ pub struct LibraryHeader {
     pub file_version: u32,
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(Debug, PartialEq, Clone, Default, PartialOrd)]
 pub struct BoardPanelHeader {
     pub file_type: String, // BOARD_FILE or PANEL_FILE
     pub version: u32,      // which IDF version, should be 3.0

@@ -12,7 +12,7 @@ use nom::number::complete::float;
 
 /// Represents a drilled hole in the IDF format.
 /// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=25
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Default, PartialOrd)]
 pub struct Hole {
     pub diameter: f32,
     pub x: f32,                  // absolute x coordinate

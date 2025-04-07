@@ -11,7 +11,7 @@ use nom::{IResult, Parser};
 /// Used repeatedly in the IDF format to represent points in a loop.
 /// First mention here:
 /// http://www.simplifiedsolutionsinc.com/images/idf_v30_spec.pdf#page=10 in Record 3
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Default, PartialOrd)]
 pub struct Point {
     /// The label of the loop the point exist in, 0 for counter-clockwise, 1 for clockwise.
     pub loop_label: u32,
