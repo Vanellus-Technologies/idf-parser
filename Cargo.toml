@@ -2,6 +2,13 @@
 name = "idf-parser"
 version = "0.1.0"
 edition = "2024"
+license = "GPL-3"
+authors = ["Laurence Cullen <laurence@vanellus.tech>", "Michael Negus <michael@vanellus.tech>"]
+description = "A parser for the IDF (Intermediate Data Format) used for interchange of PCB design data."
+readme = "README.md"
+repository = "https://github.com/Vanellus-Technologies/idf-parser"
+keywords = ["idf", "pcb", "parser", "engineering", "electronics"]
+categories = ["encoding", "parser-implementations"]
 
 [dependencies]
 nom = "8"
