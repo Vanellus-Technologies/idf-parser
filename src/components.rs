@@ -1,8 +1,9 @@
 use crate::point::{Point, point};
-use crate::primitives::ws;
+use crate::primitives::{quote_string, ws};
 use crate::{parse_section, ws_separated};
 use nom::IResult;
 use nom::Parser;
+use nom::branch::alt;
 use nom::bytes::complete::{is_not, tag};
 use nom::multi::many0;
 use nom::number::complete::float;
@@ -80,8 +81,11 @@ pub fn electrical_component(input: &str) -> IResult<&str, ElectricalComponent> {
         parse_section!(
             "ELECTRICAL",
             ws_separated!((
-                is_not(" "),           // geometry name
-                is_not(" "),           // part number
+                is_not(" "), // geometry name
+                alt((
+                    quote_string, // part number with quotes
+                    is_not(" "),  // part number without quotes
+                )),
                 is_not(" "),           // units
                 float,                 // height
                 many0(ws(point)),      // outline
@@ -146,7 +150,7 @@ pub fn mechanical_component(input: &str) -> IResult<&str, MechanicalComponent> {
 mod tests {
     use super::*;
     #[test]
-    fn test_component_placement() {
+    fn test_electrical_component() {
         let input = ".ELECTRICAL
 cs13_a pn-cap THOU 150.0
 0 -55.0 55.0 0.0
@@ -186,6 +190,37 @@ PROP THETA_JC 5.1
         assert_eq!(component.properties["THERM_COND"], 0.0);
         assert_eq!(component.properties["THETA_JB"], 0.2);
         assert_eq!(component.properties["THETA_JC"], 5.1);
+    }
+
+    #[test]
+    fn test_electrical_component_2() {
+        let input = ".ELECTRICAL\r\nGLOB_FID_60R140  \"GLOB_FID_GLOB_FID_60R140_GLOB F\"  THOU         2.0\r\n0         0.0         0.0       0.000\r\n0        70.0         0.0     360.000\r\n.END_ELECTRICAL\r\n";
+
+        let (remaining, component) = electrical_component(input).unwrap();
+
+        let expected = ElectricalComponent {
+            geometry_name: "GLOB_FID_60R140".to_string(),
+            part_number: "GLOB_FID_GLOB_FID_60R140_GLOB F".to_string(),
+            units: "THOU".to_string(),
+            height: 2.0,
+            outline: vec![
+                Point {
+                    loop_label: 0,
+                    x: 0.0,
+                    y: 0.0,
+                    angle: 0.0,
+                },
+                Point {
+                    loop_label: 0,
+                    x: 70.0,
+                    y: 0.0,
+                    angle: 360.0,
+                },
+            ],
+            properties: HashMap::new(),
+        };
+        assert_eq!(remaining, "");
+        assert_eq!(component.geometry_name, expected.geometry_name);
     }
     #[test]
     fn test_mechanical_component() {

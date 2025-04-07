@@ -1,7 +1,8 @@
-use nom::bytes::complete::tag;
+use crate::primitives::ws;
+use crate::ws_separated;
+
 use nom::character::complete::u32;
 use nom::number::complete::float;
-use nom::sequence::preceded;
 use nom::{IResult, Parser};
 
 /// Represents a point which exists as part of 2D loop of points which describe an outline of a
@@ -33,13 +34,8 @@ pub struct Point {
 /// assert_eq!(point, Point { loop_label: 0, x: 100.0, y: 200.0, angle: 45.0 });
 /// ```
 pub fn point(input: &str) -> IResult<&str, Point> {
-    let (remaining, (loop_label, x, y, angle)) = (
-        u32,
-        preceded(tag(" "), float),
-        preceded(tag(" "), float),
-        preceded(tag(" "), float),
-    )
-        .parse(input)?;
+    let (remaining, (loop_label, x, y, angle)) =
+        ws_separated!((u32, float, float, float)).parse(input)?;
     let point = Point {
         loop_label,
         x,

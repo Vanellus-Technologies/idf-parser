@@ -1,6 +1,5 @@
-use nom::character::complete::u32;
-use nom::number::complete::float;
-use nom::{Parser, character::complete::multispace0, error::ParseError, sequence::delimited};
+use nom::bytes::complete::{is_not, tag};
+use nom::{Parser, character::complete::multispace0, sequence::delimited};
 
 /// A combinator that takes a parser `inner` and produces a parser that also consumes both leading and
 /// trailing whitespace, returning the output of `inner`.
@@ -66,10 +65,29 @@ macro_rules! parse_section {
     };
 }
 
+/// Parses a quoted string from the input string.
+///
+/// # Example
+///
+/// ```
+/// use idf_parser::primitives::quote_string;
+///
+/// let input = "\"Hello, World!\"";
+///
+/// let (remaining, quoted_str) = quote_string(input).unwrap();
+///  assert_eq!(quoted_str, "Hello, World!");
+/// ```
+pub fn quote_string(input: &str) -> nom::IResult<&str, &str> {
+    delimited(tag("\""), is_not("\""), tag("\"")).parse(input)
+}
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::primitives::ws;
+    use nom::Parser;
     use nom::bytes::complete::tag;
+    use nom::character::complete::u32;
+    use nom::number::complete::float;
 
     #[test]
     fn test_ws() {
@@ -105,5 +123,13 @@ mod tests {
             .unwrap();
         assert_eq!(remaining, "");
         assert_eq!(ints, (123, 456));
+    }
+
+    #[test]
+    fn test_quote_string() {
+        let input = "\"Hello, World!\"";
+        let (remaining, quoted_str) = quote_string(input).unwrap();
+        assert_eq!(remaining, "");
+        assert_eq!(quoted_str, "Hello, World!");
     }
 }

@@ -1,4 +1,4 @@
-use crate::primitives::ws;
+use crate::primitives::{quote_string, ws};
 use crate::{parse_section, ws_separated};
 use nom::IResult;
 use nom::Parser;
@@ -26,11 +26,11 @@ pub struct Note {
 
 fn note(input: &str) -> IResult<&str, Note> {
     let (remaining, (x, y, text_height, test_string_physical_length, text)) = ws_separated!((
-        float,                                         // x
-        float,                                         // y
-        float,                                         // text height
-        float,                                         // test string physical length
-        delimited(tag("\""), is_not("\""), tag("\""))  // text
+        float,        // x
+        float,        // y
+        float,        // text height
+        float,        // test string physical length
+        quote_string  // text
     ))
     .parse(input)?;
     let note = Note {
@@ -53,7 +53,7 @@ fn note(input: &str) -> IResult<&str, Note> {
 /// 400.0 4400.0 75.0 3200.0 \"Component height limited by enclosure latch\"
 /// .END_NOTES";
 ///
-/// let (remaining, notes) = parse_notes_section(input).unwrap();
+/// let (_remaining, notes) = parse_notes_section(input).unwrap();
 /// assert_eq!(notes.len(), 2);
 /// ```
 pub fn parse_notes_section(input: &str) -> IResult<&str, Vec<Note>> {
@@ -67,14 +67,14 @@ mod tests {
     fn test_note() {
         let input = "3500.0 3300.0 75.0 2500.0 \"This component rotated 14 degrees\"";
 
-        let expected = super::Note {
+        let expected = Note {
             x: 3500.0,
             y: 3300.0,
             text_height: 75.0,
             test_string_physical_length: 2500.0,
             text: "This component rotated 14 degrees".to_string(),
         };
-        let (remaining, note) = super::note(input).unwrap();
+        let (_remaining, note) = note(input).unwrap();
         assert_eq!(note, expected);
     }
     #[test]
@@ -108,7 +108,7 @@ mod tests {
                 text: "Do not move connectors!".to_string(),
             },
         ];
-        let (remaining, notes) = parse_notes_section(input).unwrap();
+        let (_remaining, notes) = parse_notes_section(input).unwrap();
         assert_eq!(notes, expected);
     }
 
@@ -125,7 +125,7 @@ mod tests {
             test_string_physical_length: 1700.0,
             text: "Do not move connectors!".to_string(),
         }];
-        let (remaining, notes) = parse_notes_section(input).unwrap();
+        let (_remaining, notes) = parse_notes_section(input).unwrap();
         assert_eq!(notes, expected);
     }
 }

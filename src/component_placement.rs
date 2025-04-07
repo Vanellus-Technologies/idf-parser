@@ -5,6 +5,7 @@ use crate::{parse_section, ws_separated};
 use nom::IResult;
 use nom::Parser;
 use nom::bytes::complete::{is_not, tag};
+use nom::character::complete::not_line_ending;
 use nom::multi::many0;
 use nom::number::complete::float;
 use nom::sequence::delimited;
@@ -50,7 +51,7 @@ pub fn component_placement(input: &str) -> IResult<&str, ComponentPlacement> {
     ) = ws_separated!((
         is_not(" "),                                                      // package name
         is_not(" "),                                                      // part number
-        is_not("\n"),                                                     // reference designator
+        not_line_ending,                                                  // reference designator
         float,                                                            // x coordinate
         float,                                                            // y coordinate
         float,                                                            // mounting offset

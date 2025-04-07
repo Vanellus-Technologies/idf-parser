@@ -1,11 +1,12 @@
 use nom::branch::alt;
 use nom::sequence::{delimited, terminated};
 
-use crate::primitives::ws;
+use crate::primitives::{quote_string, ws};
 use crate::{parse_section, ws_separated};
 use nom::Err::Error;
 use nom::Parser;
 use nom::bytes::complete::{is_not, tag};
+use nom::character::complete::not_line_ending;
 use nom::error::ErrorKind;
 use nom::{IResult, error};
 
@@ -36,10 +37,10 @@ fn header_metadata(input: &str) -> IResult<&str, (String, u32, String, String, u
             tag("LIBRARY_FILE"),
             tag("BOARD_FILE"),
         ))), // file type
-        terminated(tag("3"), tag(".0")),                // version
-        delimited(tag(" \""), is_not("\""), tag("\"")), // system id
-        delimited(tag(" "), is_not(" "), tag(" ")),     // date
-        ws(is_not("\n")),                               // file version
+        ws(terminated(tag("3"), tag(".0"))),  // version
+        ws(alt((quote_string, is_not(" ")))), // system id
+        ws(is_not(" ")),                      // date
+        ws(not_line_ending),                  // file version
     )
         .parse(input)?;
 
@@ -151,12 +152,61 @@ sample_board THOU
 
         let (remaining, header) = parse_board_or_panel_header(input).unwrap();
         assert_eq!(remaining, "other nonsense");
-        assert_eq!(header.version, 3);
-        assert_eq!(header.system_id, "Sample File Generator");
-        assert_eq!(header.date, "10/22/96.16:02:44");
-        assert_eq!(header.file_version, 1);
-        assert_eq!(header.board_name, "sample_board");
-        assert_eq!(header.units, "THOU");
+        let example = BoardPanelHeader {
+            file_type: "BOARD_FILE".to_string(),
+            version: 3,
+            system_id: "Sample File Generator".to_string(),
+            date: "10/22/96.16:02:44".to_string(),
+            file_version: 1,
+            board_name: "sample_board".to_string(),
+            units: "THOU".to_string(),
+        };
+
+        assert_eq!(header.file_type, example.file_type);
+    }
+
+    #[test]
+    fn test_parse_board_header_isol() {
+        let input = ".HEADER
+BOARD_FILE         3.0  \"allegro 16.2\"  2010/04/27.15:29:26  1
+ISOL_mk.brd  THOU
+.END_HEADER";
+
+        let (remaining, header) = parse_board_or_panel_header(input).unwrap();
+
+        let example = BoardPanelHeader {
+            file_type: "BOARD_FILE".to_string(),
+            version: 3,
+            system_id: "allegro 16.2".to_string(),
+            date: "2010/04/27.15:29:26".to_string(),
+            file_version: 1,
+            board_name: "ISOL_mk.brd".to_string(),
+            units: "THOU".to_string(),
+        };
+        assert_eq!(remaining, "");
+        assert_eq!(header, example);
+    }
+
+    #[test]
+    fn test_parse_board_header_beaglebone() {
+        let input = ".HEADER
+BOARD_FILE         3.0  allegro_16.5  2012/12/10.15:43:34  1
+BEAGLEBONE_REVC2.brd  THOU
+.END_HEADER";
+
+        let (remaining, header) = parse_board_or_panel_header(input).unwrap();
+
+        let example = BoardPanelHeader {
+            file_type: "BOARD_FILE".to_string(),
+            version: 3,
+            system_id: "allegro_16.5".to_string(),
+            date: "2012/12/10.15:43:34".to_string(),
+            file_version: 1,
+            board_name: "BEAGLEBONE_REVC2.brd".to_string(),
+            units: "THOU".to_string(),
+        };
+        assert_eq!(remaining, "");
+        assert_eq!(header, example);
     }
     #[test]
     fn test_parse_library_header() {
@@ -170,5 +220,39 @@ LIBRARY_FILE 3.0 \"Sample File Generator\" 10/22/96.16:41:37 1
         assert_eq!(header.system_id, "Sample File Generator");
         assert_eq!(header.date, "10/22/96.16:41:37");
         assert_eq!(header.file_version, 1);
+    }
+
+    #[test]
+    fn test_library_header_isol() {
+        let input = ".HEADER
+LIBRARY_FILE         3.0  \"allegro 16.2\"  2010/04/27.15:29:26  1
+.END_HEADER";
+        let (remaining, header) = parse_library_header(input).unwrap();
+
+        let example = LibraryHeader {
+            version: 3,
+            system_id: "allegro 16.2".to_string(),
+            date: "2010/04/27.15:29:26".to_string(),
+            file_version: 1,
+        };
+        assert_eq!(remaining, "");
+        assert_eq!(header, example);
+    }
+
+    #[test]
+    fn test_library_header_beaglebone() {
+        let input = ".HEADER
+LIBRARY_FILE         3.0  allegro_16.5  2012/12/10.15:43:34  1
+.END_HEADER";
+        let (remaining, header) = parse_library_header(input).unwrap();
+
+        let example = LibraryHeader {
+            version: 3,
+            system_id: "allegro_16.5".to_string(),
+            date: "2012/12/10.15:43:34".to_string(),
+            file_version: 1,
+        };
+        assert_eq!(remaining, "");
+        assert_eq!(header, example);
     }
 }

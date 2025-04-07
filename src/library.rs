@@ -4,7 +4,6 @@ use crate::components::{
 use crate::headers::{LibraryHeader, parse_library_header};
 use nom::Parser;
 use nom::multi::many0;
-use std::collections::HashMap;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Library {
@@ -16,12 +15,25 @@ pub struct Library {
 /// Parses a library emp file which contains detail on electrical and mechanical components.
 /// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=29
 pub(crate) fn parse_library(input: &str) -> Result<Library, nom::Err<nom::error::Error<&str>>> {
-    let (remaining, (header, electrical_components, mechanical_components)) = (
-        parse_library_header,
-        many0(electrical_component),
-        many0(mechanical_component),
-    )
-        .parse(input)?;
+    // Sometimes mechanical components are first, sometimes electrical components are first.
+    let (body, header) = parse_library_header.parse(input)?;
+
+    // Check if body starts with ".ELECTRICAL" or ".MECHANICAL"
+    let (remaining, (electrical_components, mechanical_components)) =
+        if body.starts_with(".ELECTRICAL") {
+            let (remaining, (electrical_components, mechanical_components)) =
+                (many0(electrical_component), many0(mechanical_component)).parse(body)?;
+            (remaining, (electrical_components, mechanical_components))
+        } else if body.starts_with(".MECHANICAL") {
+            let (remaining, (mechanical_components, electrical_components)) =
+                (many0(mechanical_component), many0(electrical_component)).parse(body)?;
+            (remaining, (electrical_components, mechanical_components))
+        } else {
+            return Err(nom::Err::Error(nom::error::Error::new(
+                body,
+                nom::error::ErrorKind::Tag,
+            )));
+        };
 
     let library = Library {
         header,
@@ -44,6 +56,7 @@ pub(crate) fn parse_library(input: &str) -> Result<Library, nom::Err<nom::error:
 mod tests {
     use super::*;
     use crate::point::Point;
+    use std::collections::HashMap;
     #[test]
     fn test_library() {
         let input = ".HEADER

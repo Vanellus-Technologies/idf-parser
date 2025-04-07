@@ -1,13 +1,13 @@
 use nom::branch::alt;
-use nom::sequence::{delimited, terminated};
+use nom::sequence::delimited;
 
-use crate::parse_section;
 use crate::point::{Point, point};
 use crate::primitives::ws;
+use crate::{parse_section, ws_separated};
 use nom::IResult;
 use nom::Parser;
 use nom::bytes::complete::{is_not, tag};
-use nom::character::complete::newline;
+use nom::character::complete::not_line_ending;
 use nom::multi::many1;
 use nom::number::complete::float;
 
@@ -26,12 +26,7 @@ pub struct BoardPanelOutline {
 
 pub fn parse_board_panel_outline(input: &str) -> IResult<&str, BoardPanelOutline> {
     fn interior_contents(input: &str) -> IResult<&str, (&str, f32, Vec<Point>)> {
-        (
-            terminated(owner, newline),
-            terminated(float, newline),
-            many1(terminated(point, newline)),
-        )
-            .parse(input)
+        (ws(owner), ws(float), ws(many1(ws(point)))).parse(input)
     }
 
     let (remaining, (owner, thickness, outline)) = ws(alt((
@@ -68,13 +63,13 @@ pub struct OtherOutline {
 pub fn parse_other_outline(input: &str) -> IResult<&str, OtherOutline> {
     let (remaining, (owner, id, extrude_thickness, board_side, outline)) = parse_section!(
         "OTHER_OUTLINE",
-        (
-            terminated(owner, newline),        // owner
-            terminated(is_not(" "), tag(" ")), // ID
-            terminated(float, tag(" ")),       // extrude_thickness
-            terminated(is_not("\n"), newline), // board_side
-            many1(terminated(point, newline)), // outline
-        )
+        ws_separated!((
+            owner,            // owner
+            is_not(" "),      // ID
+            float,            // extrude_thickness
+            not_line_ending,  // board_side
+            many1(ws(point))  // outline
+        ))
     )
     .parse(input)?;
 
@@ -107,11 +102,7 @@ pub struct RoutingOutline {
 pub fn parse_routing_outline(input: &str) -> IResult<&str, RoutingOutline> {
     let (remaining, (owner, routing_layers, outline)) = parse_section!(
         "ROUTE_OUTLINE",
-        (
-            terminated(owner, newline),
-            terminated(is_not("\n"), newline),
-            many1(terminated(point, newline)),
-        )
+        ws_separated!((owner, not_line_ending, many1(ws(point))))
     )
     .parse(input)?;
 
@@ -143,12 +134,12 @@ pub struct PlacementOutline {
 pub fn parse_placement_outline(input: &str) -> IResult<&str, PlacementOutline> {
     let (remaining, (owner, board_side, outline_height, outline)) = parse_section!(
         "PLACE_OUTLINE",
-        (
-            terminated(owner, newline),        // owner
-            terminated(is_not(" "), tag(" ")), // board_side
-            terminated(float, newline),        // outline_height
-            many1(terminated(point, newline)), // outline
-        )
+        ws_separated!((
+            owner,            // owner
+            is_not(" "),      // board_side
+            float,            // outline_height
+            many1(ws(point))  // outline
+        ))
     )
     .parse(input)?;
 
@@ -181,11 +172,7 @@ pub struct RoutingKeepout {
 pub fn parse_routing_keepout(input: &str) -> IResult<&str, RoutingKeepout> {
     let (remaining, (owner, routing_layers, outline)) = parse_section!(
         "ROUTE_KEEPOUT",
-        (
-            terminated(owner, newline),
-            terminated(is_not("\n"), newline),
-            many1(terminated(point, newline)),
-        )
+        ws_separated!((owner, not_line_ending, many1(ws(point))))
     )
     .parse(input)?;
 
@@ -214,14 +201,8 @@ pub struct ViaKeepout {
 }
 
 pub fn parse_via_keepout(input: &str) -> IResult<&str, ViaKeepout> {
-    let (remaining, (owner, outline)) = parse_section!(
-        "VIA_KEEPOUT",
-        (
-            terminated(owner, newline),
-            many1(terminated(point, newline)),
-        )
-    )
-    .parse(input)?;
+    let (remaining, (owner, outline)) =
+        parse_section!("VIA_KEEPOUT", ws_separated!((owner, many1(ws(point))))).parse(input)?;
 
     Ok((
         remaining,
@@ -253,12 +234,12 @@ pub struct PlacementKeepout {
 pub fn parse_placement_keepout(input: &str) -> IResult<&str, PlacementKeepout> {
     let (remaining, (owner, board_side, keepout_height, outline)) = parse_section!(
         "PLACE_KEEPOUT",
-        (
-            terminated(owner, newline),
-            terminated(is_not(" "), tag(" ")), // board_side
-            terminated(float, newline),        // keepout_height
-            many1(terminated(point, newline)), // outline
-        )
+        ws_separated!((
+            owner,
+            is_not(" "),      // board_side
+            float,            // keepout_height
+            many1(ws(point))  // outline
+        ))
     )
     .parse(input)?;
 
@@ -292,12 +273,12 @@ pub struct PlacementGroupArea {
 pub fn parse_placement_group_area(input: &str) -> IResult<&str, PlacementGroupArea> {
     let (remaining, (owner, board_side, group_name, outline)) = parse_section!(
         "PLACE_REGION",
-        (
-            terminated(owner, newline),
-            terminated(is_not(" "), tag(" ")), // board_side
-            terminated(is_not("\n"), newline), // group_name
-            many1(terminated(point, newline)), // outline
-        )
+        ws_separated!((
+            owner,
+            is_not(" "),      // board_side
+            not_line_ending,  // group_name
+            many1(ws(point))  // outline
+        ))
     )
     .parse(input)?;
 
@@ -338,6 +319,38 @@ mod tests {
         assert_eq!(board_outline.outline[0].x, 5.5);
         assert_eq!(board_outline.outline[0].y, -120.0);
         assert_eq!(board_outline.outline[0].angle, 0.0);
+    }
+
+    #[test]
+    fn test_parse_board_outline_2() {
+        let input = ".BOARD_OUTLINE  ECAD
+      40.0
+0         0.0         0.0       0.000
+3      1574.0       235.7      90.087
+.END_BOARD_OUTLINE";
+        let (remaining, board_outline) = parse_board_panel_outline(input).unwrap();
+
+        let expected_outline = BoardPanelOutline {
+            owner: "ECAD".to_string(),
+            thickness: 40.0,
+            outline: vec![
+                Point {
+                    loop_label: 0,
+                    x: 0.0,
+                    y: 0.0,
+                    angle: 0.0,
+                },
+                Point {
+                    loop_label: 3,
+                    x: 1574.0,
+                    y: 235.7,
+                    angle: 90.087,
+                },
+            ],
+        };
+
+        assert_eq!(remaining, "");
+        assert_eq!(board_outline, expected_outline);
     }
 
     #[test]
