@@ -5,7 +5,7 @@ use crate::headers::{LibraryHeader, parse_library_header};
 use nom::Parser;
 use nom::multi::many0;
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Default)]
 pub struct Library {
     pub header: LibraryHeader,
     pub electrical_components: Vec<ElectricalComponent>,

@@ -2,7 +2,7 @@ use crate::primitives::{quote_string, ws};
 use crate::{parse_section, ws_separated};
 use nom::IResult;
 use nom::Parser;
-use nom::bytes::complete::{is_not, tag};
+use nom::bytes::complete::tag;
 use nom::multi::many1;
 use nom::number::complete::float;
 use nom::sequence::delimited;
@@ -15,7 +15,7 @@ use nom::sequence::delimited;
 /// entities beyond that conveyed by the entities themselves. Notes are not intended to be used for
 /// rigorous translations of text such as for transferring manufacturing drawings. The association of a
 /// note to its subject is inferred by its location.
-#[derive(PartialEq, Debug, Clone)]
+#[derive(Debug, PartialEq, Clone, Default, PartialOrd)]
 pub struct Note {
     pub x: f32,
     pub y: f32,

@@ -25,7 +25,7 @@ use std::collections::HashMap;
 /// - theta_jb: Junction to board thermal resistance in °C per watt
 /// - theta_jc: Junction to case thermal resistance in °C per watt
 /// - other: User-defined properties
-fn electrical_properties(input: &str) -> IResult<&str, HashMap<String, f32>> {
+fn electrical_properties(input: &str) -> IResult<&str, ElectricalProperties> {
     let (remaining, properties) = many0(electrical_property).parse(input)?;
     Ok((remaining, properties.into_iter().collect()))
 }
@@ -37,21 +37,24 @@ fn electrical_property(input: &str) -> IResult<&str, (String, f32)> {
     Ok((remaining, (prop_name.to_string(), value)))
 }
 
+/// Represent properties of an electrical component.
+type ElectricalProperties = HashMap<String, f32>;
+
 /// Represents an electrical component in the IDF format.
 /// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=31
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Default)]
 pub struct ElectricalComponent {
     pub geometry_name: String,
     pub part_number: String,
     pub units: String,
     pub height: f32,
     pub outline: Vec<Point>,
-    pub properties: HashMap<String, f32>,
+    pub properties: ElectricalProperties,
 }
 
 /// Represents a mechanical component in the IDF format.
 /// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=34
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Default, PartialOrd)]
 pub struct MechanicalComponent {
     pub geometry_name: String,
     pub part_number: String,

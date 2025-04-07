@@ -12,7 +12,7 @@ use nom::Parser;
 use nom::multi::{many_m_n, many0};
 
 /// Represents a board or panel file in the IDF format.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Default, PartialOrd)]
 pub struct BoardPanel {
     pub header: BoardPanelHeader,
     pub outline: BoardPanelOutline,

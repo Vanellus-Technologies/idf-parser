@@ -17,7 +17,7 @@ use nom::number::complete::float;
 /// This section defines the board or panel outline and its internal cutouts as a 2D profile with
 /// thickness. The outline and cutouts consist of simple closed curves made up of arcs and lines.
 /// Only one outline may be specified, but multiple cutouts are allowed.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Default, PartialOrd)]
 pub struct BoardPanelOutline {
     pub owner: String, // MCAD, ECAD or UNOWNED
     pub thickness: f32,
@@ -51,7 +51,7 @@ pub fn parse_board_panel_outline(input: &str) -> IResult<&str, BoardPanelOutline
 /// This section defines an additional outline with cutouts that can be used for other purposes than
 /// the board outline such as for defining a heatsink or board core. The outline and cutouts consist of
 /// simple closed curves made up of arcs and lines. Multiple other outline sections may be specified.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Default, PartialOrd)]
 pub struct OtherOutline {
     pub owner: String, // MCAD, ECAD or UNOWNED
     pub id: String,
@@ -92,7 +92,7 @@ pub fn parse_other_outline(input: &str) -> IResult<&str, OtherOutline> {
 /// region within which routing must be confined, and consists of a simple closed curve made up of
 /// arcs and lines. Portions of routing outlines on a panel that lie on a board in the panel are inherited
 /// by that board. Multiple routing outlines may be defined.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Default, PartialOrd)]
 pub struct RoutingOutline {
     pub owner: String,          // MCAD, ECAD or UNOWNED
     pub routing_layers: String, // TOP, BOTTOM, BOTH, INNER or ALL
@@ -123,7 +123,7 @@ pub fn parse_routing_outline(input: &str) -> IResult<&str, RoutingOutline> {
 /// a region within which components must be placed, and consists of a simple closed curve made up
 /// of arcs and lines plus a height restriction. Portions of placement outlines on a panel that lie on a
 /// board in the panel are inherited by that board. Multiple placement outlines may be defined.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Default, PartialOrd)]
 pub struct PlacementOutline {
     pub owner: String,       // MCAD, ECAD or UNOWNED
     pub board_side: String,  // TOP, BOTTOM or BOTH
@@ -162,7 +162,7 @@ pub fn parse_placement_outline(input: &str) -> IResult<&str, PlacementOutline> {
 /// or all routing layers. Each keepout consists of a simple closed curve made up of arcs and lines.
 /// Portions of routing keepouts on a panel that lie on a board in the panel are inherited by that board.
 /// Multiple keepouts are allowed.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Default, PartialOrd)]
 pub struct RoutingKeepout {
     pub owner: String,          // MCAD, ECAD or UNOWNED
     pub routing_layers: String, // TOP, BOTTOM, BOTH, INNER or ALL
@@ -194,7 +194,7 @@ pub fn parse_routing_keepout(input: &str) -> IResult<&str, RoutingKeepout> {
 /// made up of arcs and lines. Portions of via keepouts on a panel that lie on a board in the panel are
 /// inherited by that board. Multiple via keepouts are allowed. Only through vias (vias that go all the
 /// way through the board) are supported.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Default, PartialOrd)]
 pub struct ViaKeepout {
     pub owner: String, // MCAD, ECAD or UNOWNED
     pub outline: Vec<Point>,
@@ -223,7 +223,7 @@ pub fn parse_via_keepout(input: &str) -> IResult<&str, ViaKeepout> {
 /// simple closed curve made up of arcs and lines along with a height restriction. Portions of
 /// placement keepouts on a panel that lie on a board in the panel are inherited by that board.
 /// Multiple keepouts are allowed.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Default, PartialOrd)]
 pub struct PlacementKeepout {
     pub owner: String,       // MCAD, ECAD or UNOWNED
     pub board_side: String,  // TOP, BOTTOM or BOTH
@@ -262,7 +262,7 @@ pub fn parse_placement_keepout(input: &str) -> IResult<&str, PlacementKeepout> {
 /// Each placement group area consists of a simple closed curve made up of arcs and lines along with
 /// a name designating the group of components to be placed in that area. Multiple areas are
 /// allowed.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Default, PartialOrd)]
 pub struct PlacementGroupArea {
     pub owner: String,      // MCAD, ECAD or UNOWNED
     pub board_side: String, // TOP, BOTTOM or BOTH
