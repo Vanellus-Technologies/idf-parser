@@ -21,7 +21,7 @@ pub mod component_placement;
 pub mod components;
 pub mod drilled_holes;
 pub mod headers;
-mod library;
+pub mod library;
 pub mod notes;
 mod outlines;
 pub mod point;
