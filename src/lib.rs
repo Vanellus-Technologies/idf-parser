@@ -23,7 +23,7 @@ pub mod drilled_holes;
 pub mod headers;
 pub mod library;
 pub mod notes;
-mod outlines;
+pub mod outlines;
 pub mod point;
 pub mod primitives;
 mod validation;
