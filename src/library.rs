@@ -14,7 +14,7 @@ pub struct Library {
 
 /// Parses a library emp file which contains detail on electrical and mechanical components.
 /// http://www.aertia.com/docs/priware/IDF_V30_Spec.pdf#page=29
-pub(crate) fn parse_library(input: &str) -> Result<Library, nom::Err<nom::error::Error<&str>>> {
+pub fn parse_library(input: &str) -> Result<Library, nom::Err<nom::error::Error<&str>>> {
     // Sometimes mechanical components are first, sometimes electrical components are first.
     let (body, header) = parse_library_header.parse(input)?;
 
